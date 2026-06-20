@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My K-Drama Year</title>
+<style>
+:root {
+  --bg: #fdf7f4;
+  --bg2: #fffaf8;
+  --card: #ffffff;
+  --border: #ecddd7;
+  --border2: #ddd0ca;
+  --text: #3a2e2e;
+  --text2: #7a6a65;
+  --text3: #a89890;
+  --accent: #c26b6b;
+  --accent2: #d98080;
+  --accent-bg: #faeaea;
+  --star: #d4902a;
+  --star-empty: #ddd0ca;
+  --green: #5a8a6a;
+  --green-bg: #eaf3ec;
+  --blue: #4a7a9a;
+  --blue-bg: #e8f2f8;
+  --purple: #7a6a9a;
+  --purple-bg: #f0eef8;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(58,46,46,0.08);
+  --nav-h: 60px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 16px; line-height: 1.5; overflow-x: hidden; }
+
+/* Nav */
+nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; height: var(--nav-h); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+nav button { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 4px; color: var(--text3); font-size: 10px; font-family: var(--font); transition: color 0.15s; }
+nav button.active { color: var(--accent); }
+nav button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Layout */
+main { padding: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)); min-height: 100vh; }
+.page { display: none; padding: 16px 16px 24px; max-width: 900px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* Header bar */
+.topbar { position: sticky; top: 0; background: var(--bg); padding: 12px 16px; z-index: 50; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); margin: -16px -16px 16px; }
+.topbar h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; flex: 1; }
+.topbar h1 span { color: var(--accent); }
+
+/* Cards */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.card:last-child { margin-bottom: 0; }
+
+/* Stat grid */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; }
+.stat-num { font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+/* Drama cards */
+.drama-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.drama-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 12px; cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; position: relative; }
+.drama-card:active { transform: scale(0.98); }
+.drama-card:hover { box-shadow: var(--shadow); }
+.drama-card .title { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.3; }
+.drama-card .meta { font-size: 12px; color: var(--text2); display: flex; flex-direction: column; gap: 3px; }
+.drama-card .heart { position: absolute; top: 10px; right: 10px; font-size: 16px; color: var(--accent); }
+.drama-card .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
+.status-watched { background: var(--green); }
+.status-watching { background: var(--accent); }
+.status-want { background: var(--blue); }
+
+/* Stars */
+.stars { display: flex; gap: 2px; }
+.star { font-size: 14px; cursor: pointer; color: var(--star-empty); transition: color 0.1s; user-select: none; }
+.star.filled { color: var(--star); }
+.star.half { background: linear-gradient(to right, var(--star) 50%, var(--star-empty) 50%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* Table view */
+.drama-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.drama-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
+.drama-table th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border); color: var(--text2); font-weight: 600; font-size: 12px; white-space: nowrap; cursor: pointer; user-select: none; }
+.drama-table th:hover { color: var(--text); }
+.drama-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.drama-table tr:hover td { background: var(--accent-bg); cursor: pointer; }
+.drama-table .sort-arrow { display: inline-block; margin-left: 3px; }
+
+/* Tags / pills */
+.tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { background: var(--purple-bg); color: var(--purple); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.tag.type-drama { background: var(--blue-bg); color: var(--blue); }
+.tag.type-reality { background: var(--green-bg); color: var(--green); }
+
+/* Filter bar */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 12px; font-size: 13px; color: var(--text); font-family: var(--font); outline: none; }
+.filter-bar input { flex: 1; min-width: 120px; }
+.filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent2); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; border: none; border-radius: 20px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s, transform 0.1s; white-space: nowrap; }
+.btn:active { transform: scale(0.97); }
+.btn:hover { background: var(--accent2); }
+.btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border2); }
+.btn.secondary:hover { background: var(--bg); }
+.btn.small { padding: 6px 14px; font-size: 12px; }
+.btn.danger { background: #c44; }
+.btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+.btn-fab { position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px); right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(194,107,107,0.4); display: flex; align-items: center; justify-content: center; z-index: 90; transition: transform 0.15s, background 0.15s; }
+.btn-fab:active { transform: scale(0.92); }
+.btn-fab:hover { background: var(--accent2); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: flex-end; }
+.modal-overlay.center { align-items: center; justify-content: center; }
+.modal { background: var(--bg2); border-radius: var(--radius) var(--radius) 0 0; width: 100%; max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 16px 32px; max-width: 600px; }
+.modal-overlay.center .modal { border-radius: var(--radius); max-height: 90vh; margin: 16px; }
+.modal-handle { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 16px; }
+.modal h2 { font-size: 18px; margin-bottom: 16px; }
+.modal-footer { display: flex; gap: 10px; padding-top: 16px; }
+.modal-footer .btn { flex: 1; justify-content: center; }
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-size: 15px; color: var(--text); font-family: var(--font); outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent2); }
+.form-group textarea { min-height: 100px; resize: vertical; line-height: 1.5; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.form-tags .tag-toggle { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; transition: all 0.15s; color: var(--text2); }
+.form-tags .tag-toggle.selected { background: var(--purple-bg); border-color: var(--purple); color: var(--purple); font-weight: 600; }
+.star-input { display: flex; gap: 4px; }
+.star-input span { font-size: 24px; cursor: pointer; color: var(--star-empty); transition: color 0.1s; user-select: none; }
+.star-input span.on { color: var(--star); }
+.toggle-row { display: flex; align-items: center; gap: 10px; }
+.toggle { position: relative; width: 44px; height: 26px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 13px; transition: background 0.2s; cursor: pointer; }
+.toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+/* Episode tracker */
+.ep-track { display: flex; align-items: center; gap: 8px; }
+.ep-track input[type=number] { width: 60px; text-align: center; }
+.ep-track span { color: var(--text2); font-size: 13px; }
+
+/* View toggle */
+.view-toggle { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 3px; }
+.view-toggle button { background: none; border: none; border-radius: 16px; padding: 5px 12px; cursor: pointer; font-size: 12px; color: var(--text2); transition: all 0.15s; }
+.view-toggle button.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+/* Section title */
+.section-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.section-title .count { background: var(--accent-bg); color: var(--accent); border-radius: 20px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+
+/* Referral card */
+.ref-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.ref-card .ref-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.ref-card .ref-from { font-size: 13px; color: var(--accent); font-weight: 600; }
+.ref-card .ref-note { font-size: 13px; color: var(--text2); margin: 6px 0; }
+.ref-card .ref-footer { display: flex; align-items: center; gap: 8px; justify-content: space-between; margin-top: 10px; }
+.ref-card .ref-date { font-size: 11px; color: var(--text3); }
+
+/* Import */
+.import-drop { border: 2px dashed var(--border2); border-radius: var(--radius); padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.15s; color: var(--text2); }
+.import-drop:hover, .import-drop.drag-over { border-color: var(--accent2); color: var(--accent); background: var(--accent-bg); }
+.import-preview { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 14px; }
+.import-preview table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.import-preview th { background: var(--bg); padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text2); border-bottom: 1px solid var(--border); }
+.import-preview td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.import-preview .dup { opacity: 0.5; }
+.import-preview .dup-badge { background: #fff3cd; color: #856404; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+.import-preview .new-badge { background: var(--green-bg); color: var(--green); border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+.import-check { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+
+/* Drive status */
+.drive-banner { background: var(--blue-bg); border: 1px solid #b8d8ed; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.drive-banner.ok { background: var(--green-bg); border-color: #b8ddc4; color: var(--green); }
+.drive-banner.warn { background: #fff8e8; border-color: #f0d890; color: #7a5a10; }
+.drive-banner.error { background: #faeaea; border-color: #e8b4b4; color: #8a3a3a; }
+.save-status { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+/* Drag handle for ordering */
+.drag-handle { cursor: grab; color: var(--text3); display: flex; align-items: center; }
+.drag-handle svg { width: 16px; height: 16px; }
+
+/* Empty state */
+.empty { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty .emoji { font-size: 40px; margin-bottom: 10px; }
+
+/* Toast */
+#toast { position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: white; border-radius: 20px; padding: 10px 20px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Category breakdown bars */
+.cat-bar { margin-bottom: 8px; }
+.cat-bar .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.cat-bar .cat-name { font-size: 12px; color: var(--text2); min-width: 80px; }
+.cat-bar .bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.cat-bar .bar-fill { height: 100%; background: var(--accent2); border-radius: 3px; transition: width 0.4s; }
+.cat-bar .cat-count { font-size: 11px; color: var(--text3); min-width: 20px; text-align: right; }
+
+/* Journal detail */
+.journal-text { font-size: 15px; line-height: 1.7; color: var(--text); white-space: pre-wrap; background: var(--bg); border-radius: var(--radius-sm); padding: 14px; margin-top: 10px; }
+
+/* Setup guide */
+.setup-step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+.setup-step .num { background: var(--accent); color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.setup-step .desc { font-size: 14px; line-height: 1.5; color: var(--text); }
+.setup-step code { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 13px; }
+
+/* Responsive */
+@media (min-width: 600px) {
+  .drama-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .page { padding: 20px 24px 32px; }
+  .topbar { padding: 14px 24px; margin: -20px -24px 20px; }
+}
+@media (min-width: 900px) {
+  nav { top: 0; bottom: auto; border-top: none; border-bottom: 1px solid var(--border); flex-direction: row; height: auto; padding: 0 24px; }
+  nav button { flex-direction: row; padding: 16px 18px; font-size: 14px; gap: 6px; }
+  nav button svg { width: 18px; height: 18px; }
+  main { padding: 0 0 40px; }
+  .btn-fab { bottom: 32px; }
+}
+
+/* Want to Watch drag ordering */
+.want-list .drama-card { cursor: grab; }
+.want-list .drama-card.dragging { opacity: 0.4; }
+.want-list .drama-card.drag-over-top { border-top: 2px solid var(--accent); }
+.want-list .drama-card.drag-over-bottom { border-bottom: 2px solid var(--accent); }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <button class="active" data-tab="dashboard" onclick="goTab('dashboard')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Home
+  </button>
+  <button data-tab="list" onclick="goTab('list')">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    My List
+  </button>
+  <button data-tab="referrals" onclick="goTab('referrals')">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Referrals
+  </button>
+  <button data-tab="settings" onclick="goTab('settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<main>
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="page active">
+    <div class="topbar">
+      <h1>My <span>K-Drama</span> Year</h1>
+      <div class="save-status" id="save-status">✓ Saved</div>
+    </div>
+    <div id="drive-banner"></div>
+    <div class="stat-grid" id="stats"></div>
+    <div class="section-title">❤️ Favorites</div>
+    <div id="dash-favorites"></div>
+    <div class="section-title" style="margin-top:18px">📺 Watching Now</div>
+    <div id="dash-watching"></div>
+    <div class="section-title" style="margin-top:18px">✍️ Recent Journal Entries</div>
+    <div id="dash-recent"></div>
+    <div class="section-title" style="margin-top:18px">🏷️ Top Categories</div>
+    <div id="dash-cats"></div>
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn" onclick="openModal('add-drama')">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Add Drama
+      </button>
+      <button class="btn secondary" onclick="openModal('add-referral')">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Add Referral
+      </button>
+    </div>
+  </div>
+
+  <!-- MY LIST -->
+  <div id="tab-list" class="page">
+    <div class="topbar">
+      <h1>My <span>List</span></h1>
+      <div class="view-toggle">
+        <button id="view-grid-btn" class="active" onclick="setView('grid')">Grid</button>
+        <button id="view-table-btn" onclick="setView('table')">Table</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="search" id="search" placeholder="Search…" oninput="renderList()">
+      <select id="filter-type" onchange="renderList()">
+        <option value="">All types</option>
+        <option value="Drama">Drama</option>
+        <option value="Reality">Reality</option>
+      </select>
+      <select id="filter-status" onchange="renderList()">
+        <option value="">All statuses</option>
+        <option value="Watched">Watched</option>
+        <option value="Watching">Watching</option>
+        <option value="Want to Watch">Want to Watch</option>
+      </select>
+      <select id="filter-cat" onchange="renderList()">
+        <option value="">All categories</option>
+      </select>
+      <select id="sort-by" onchange="renderList()">
+        <option value="dateFinished-desc">Newest watched</option>
+        <option value="dateFinished-asc">Oldest watched</option>
+        <option value="rating-desc">Highest rated</option>
+        <option value="rating-asc">Lowest rated</option>
+        <option value="title-asc">Title A–Z</option>
+        <option value="title-desc">Title Z–A</option>
+      </select>
+    </div>
+    <div id="list-status-tabs" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div id="list-content"></div>
+  </div>
+
+  <!-- REFERRALS -->
+  <div id="tab-referrals" class="page">
+    <div class="topbar"><h1><span>Referrals</span></h1></div>
+    <div id="referrals-list"></div>
+    <div class="empty" id="referrals-empty" style="display:none">
+      <div class="emoji">💌</div>
+      <p>No referrals yet.<br>Add shows friends have recommended.</p>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="tab-settings" class="page">
+    <div class="topbar"><h1><span>Settings</span></h1></div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:10px">☁️ Google Drive Sync</div>
+      <div id="drive-status-settings"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn small" id="btn-connect-drive" onclick="connectDrive()" style="display:none">Connect Drive</button>
+        <button class="btn small secondary" id="btn-disconnect-drive" onclick="disconnectDrive()" style="display:none">Disconnect</button>
+        <button class="btn small secondary" onclick="forceSave()">Force Save</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-title" style="margin-bottom:10px">📥 Import CSV</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Import from a CSV with columns: Title, Type, Service, Status, Date Finished, Rating, Notes</p>
+      <div class="import-drop" id="drop-zone" onclick="document.getElementById('csv-input').click()">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <div style="font-weight:600">Drop CSV file here or tap to browse</div>
+        <div style="font-size:12px;margin-top:4px">Title, Type, Service, Status, Date Finished, Rating, Notes</div>
+      </div>
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCsvFile(this)">
+      <div id="import-preview-wrap"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-title" style="margin-bottom:10px">⚙️ Drive Setup Guide</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">To save to your Google Drive, you need a free Google Cloud project with OAuth. One-time setup, takes ~10 minutes.</p>
+      <div class="setup-step">
+        <div class="num">1</div>
+        <div class="desc">Go to <strong>console.cloud.google.com</strong>, sign in, and create a new project (name it anything, e.g. "KDrama Tracker").</div>
+      </div>
+      <div class="setup-step">
+        <div class="num">2</div>
+        <div class="desc">In the project, go to <strong>APIs & Services → Enable APIs</strong>. Search for "Google Drive API" and click Enable.</div>
+      </div>
+      <div class="setup-step">
+        <div class="num">3</div>
+        <div class="desc">Go to <strong>APIs & Services → OAuth consent screen</strong>. Choose "External", fill in app name ("My K-Drama Year"), save. On the scopes page, add <code>drive.appdata</code> scope.</div>
+      </div>
+      <div class="setup-step">
+        <div class="num">4</div>
+        <div class="desc">Go to <strong>Credentials → Create Credentials → OAuth client ID</strong>. Choose "Web application". Under Authorized JavaScript origins, add the URL where you're running this file (e.g. <code>http://localhost:8080</code>). Copy the <strong>Client ID</strong>.</div>
+      </div>
+      <div class="setup-step">
+        <div class="num">5</div>
+        <div class="desc">Paste your Client ID below and click Save. Then click Connect Drive above.</div>
+      </div>
+      <div class="form-group" style="margin-top:8px;">
+        <label>Google OAuth Client ID</label>
+        <input type="text" id="client-id-input" placeholder="xxxxxxxxx.apps.googleusercontent.com" value="">
+      </div>
+      <button class="btn small" onclick="saveClientId()">Save Client ID</button>
+      <p style="font-size:12px;color:var(--text3);margin-top:8px;">Your Client ID is stored only in your browser. Your drama data is stored only in your Google Drive.</p>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="section-title" style="margin-bottom:10px">🗑️ Danger Zone</div>
+      <button class="btn danger small" onclick="clearAllData()">Clear All Data</button>
+    </div>
+  </div>
+</main>
+
+<!-- FAB -->
+<button class="btn-fab" id="fab" onclick="handleFab()" title="Add">+</button>
+
+<!-- ADD/EDIT DRAMA MODAL -->
+<div id="modal-drama" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'modal-drama')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modal-drama-title">Add Drama</h2>
+    <input type="hidden" id="edit-id">
+    <div class="form-group">
+      <label>Title *</label>
+      <input type="text" id="f-title" placeholder="Drama title…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="f-type">
+          <option>Drama</option>
+          <option>Reality</option>
+          <option>Film</option>
+          <option>Variety</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="f-status" onchange="toggleEpisodeField()">
+          <option value="Watched">Watched</option>
+          <option value="Watching">Watching</option>
+          <option value="Want to Watch">Want to Watch</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>My Rating</label>
+      <div class="star-input" id="star-input" data-value="0">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+    </div>
+    <div class="form-group" id="episode-field" style="display:none">
+      <label>Episode Progress</label>
+      <div class="ep-track">
+        <input type="number" id="f-ep-current" min="0" placeholder="0" style="width:60px">
+        <span>of</span>
+        <input type="number" id="f-ep-total" min="0" placeholder="?" style="width:60px">
+        <span>episodes</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Categories</label>
+      <div class="form-tags" id="cat-tags"></div>
+      <div style="margin-top:6px;display:flex;gap:6px;">
+        <input type="text" id="new-cat-input" placeholder="Add custom tag…" style="flex:1;font-size:13px;padding:6px 10px;">
+        <button class="btn small secondary" onclick="addCustomCat()">Add</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Where I watched</label>
+        <input type="text" id="f-service" placeholder="Netflix, Viki…">
+      </div>
+      <div class="form-group">
+        <label>Recommended by</label>
+        <input type="text" id="f-rec-by" placeholder="Name…">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date started</label>
+        <input type="date" id="f-date-start">
+      </div>
+      <div class="form-group">
+        <label>Date finished</label>
+        <input type="date" id="f-date-finish">
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" id="f-favorite"><span class="toggle-slider"></span></label>
+        <span style="font-size:14px">Favorite ❤️</span>
+        <label class="toggle" style="margin-left:16px"><input type="checkbox" id="f-rewatch"><span class="toggle-slider"></span></label>
+        <span style="font-size:14px">Rewatch</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Journal entry</label>
+      <textarea id="f-journal" placeholder="How did this make you feel? Favorite moments, what stuck with you…"></textarea>
+    </div>
+    <div id="rewatch-section" style="display:none">
+      <div class="form-group">
+        <label>Rewatch notes</label>
+        <textarea id="f-rewatch-notes" placeholder="New thoughts on rewatch…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" onclick="closeModal('modal-drama')">Cancel</button>
+      <button class="btn" onclick="saveDrama()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW DRAMA MODAL -->
+<div id="modal-view" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'modal-view')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="view-drama-content"></div>
+    <div class="modal-footer" style="margin-top:8px;">
+      <button class="btn secondary small" onclick="deleteDramaConfirm()">Delete</button>
+      <button class="btn small" onclick="editCurrentDrama()">Edit</button>
+      <button class="btn secondary small" onclick="closeModal('modal-view')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD REFERRAL MODAL -->
+<div id="modal-referral" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'modal-referral')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modal-ref-title">Add Referral</h2>
+    <input type="hidden" id="edit-ref-id">
+    <div class="form-group">
+      <label>Title *</label>
+      <input type="text" id="rf-title" placeholder="Drama or film title…">
+    </div>
+    <div class="form-group">
+      <label>Recommended by *</label>
+      <input type="text" id="rf-by" placeholder="Name…">
+    </div>
+    <div class="form-group">
+      <label>What they said</label>
+      <textarea id="rf-notes" placeholder="Why they recommended it, what it's like…" style="min-height:70px"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Date recommended</label>
+      <input type="date" id="rf-date">
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" onclick="closeModal('modal-referral')">Cancel</button>
+      <button class="btn" onclick="saveReferral()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────
+const STORAGE_KEY = 'kdrama_data_v1';
+const CLIENT_ID_KEY = 'kdrama_gclient_id';
+const FILE_NAME = 'kdrama-tracker-data.json';
+const DRIVE_FILE_KEY = 'kdrama_drive_file_id';
+
+const DEFAULT_CATS = ['Romance','Comedy','Thriller','Revenge','Zombie/Horror','Fantasy','Slice of life','Historical','Tearjerker','Medical','Legal','Workplace','Family','Friendship'];
+
+// ─── Seed data ───────────────────────────────────────────────────────
+function makeSeedData() {
+  const watched = [
+    {title:"Tastefully Yours",service:"Netflix",type:"Drama",dateFinished:"2025-06-09"},
+    {title:"When Life Gives You Tangerines",service:"Netflix",type:"Drama",dateFinished:"2025-06-15"},
+    {title:"Culinary Class Wars",service:"Netflix",type:"Reality",dateFinished:"2025-06-23"},
+    {title:"Crash Landing on You",service:"Netflix",type:"Drama",dateFinished:"2025-06-29"},
+    {title:"Extraordinary Attorney Woo",service:"Netflix",type:"Drama",dateFinished:"2025-07-06"},
+    {title:"Thirty-Nine",service:"Netflix",type:"Drama",dateFinished:"2025-07-17"},
+    {title:"Lovely Runner",service:"",type:"Drama",dateFinished:""},
+    {title:"Mr. Queen",service:"",type:"Drama",dateFinished:""},
+    {title:"Vincenzo",service:"Netflix",type:"Drama",dateFinished:"2025-09-26"},
+    {title:"Beyond the Bar",service:"Netflix",type:"Drama",dateFinished:"2025-10-04"},
+    {title:"Bon Appétit, Your Majesty",service:"Netflix",type:"Drama",dateFinished:"2025-10-13"},
+    {title:"Nobody Wants This",service:"Netflix",type:"Drama",dateFinished:"2025-11-03"},
+    {title:"King the Land",service:"Netflix",type:"Drama",dateFinished:"2025-11-06"},
+    {title:"Little Women",service:"Netflix",type:"Drama",dateFinished:"2025-11-23"},
+    {title:"Typhoon Family",service:"Netflix",type:"Drama",dateFinished:"2025-11-25"},
+    {title:"Doctors",service:"Netflix",type:"Drama",dateFinished:"2025-12-11"},
+    {title:"Dynamite Kiss",service:"Netflix",type:"Drama",dateFinished:"2025-12-26"},
+    {title:"Hometown Cha-Cha-Cha",service:"Netflix",type:"Drama",dateFinished:"2026-01-01"},
+    {title:"Queen of Tears",service:"Netflix",type:"Drama",dateFinished:"2026-01-18"},
+    {title:"Pro Bono",service:"Netflix",type:"Drama",dateFinished:"2026-01-27"},
+    {title:"Can This Love Be Translated?",service:"Netflix",type:"Drama",dateFinished:"2026-02-04"},
+    {title:"Resident Playbook",service:"Netflix",type:"Drama",dateFinished:"2026-02-14"},
+    {title:"Reply 1988",service:"Netflix",type:"Drama",dateFinished:"2026-02-26"},
+    {title:"Hospital Playlist",service:"Netflix",type:"Drama",dateFinished:"2026-03-22"},
+    {title:"Phantom Lawyer",service:"Netflix",type:"Drama",dateFinished:"2026-05-02"},
+    {title:"Something in the Rain",service:"Netflix",type:"Drama",dateFinished:"2026-05-12"},
+    {title:"Love Next Door",service:"Netflix",type:"Drama",dateFinished:"2026-05-27"},
+    {title:"One Spring Night",service:"Netflix",type:"Drama",dateFinished:"2026-06-01"},
+    {title:"Gimbap and Onigiri",service:"Netflix",type:"Drama",dateFinished:"2026-06-05"},
+    {title:"Sold Out on You",service:"Netflix",type:"Drama",dateFinished:"2026-06-13"},
+    {title:"When the Camellia Blooms",service:"Netflix",type:"Drama",dateFinished:"2026-06-20"},
+    {title:"Rented in Finland",service:"Viki",type:"Reality",dateFinished:""},
+    {title:"The Village Barber",service:"Viki",type:"Reality",dateFinished:""},
+    {title:"The First Night with the Duke",service:"Viki",type:"Drama",dateFinished:""},
+    {title:"Sh**ting Stars",service:"Viki",type:"Drama",dateFinished:""},
+    {title:"Guardian: The Lonely and Great God",service:"Viki",type:"Drama",dateFinished:""},
+  ];
+  const wantToWatch = [
+    "Twenty-Five Twenty-One","The Glory","All of Us Are Dead","Train to Busan","The Trunk"
+  ];
+  const dramas = watched.map((d,i) => ({
+    id: uuid(), title: d.title, type: d.type, status: 'Watched',
+    rating: 0, categories: [], service: d.service,
+    dateStarted: '', dateFinished: d.dateFinished,
+    journal: '', favorite: false, currentEpisode: 0, totalEpisodes: 0,
+    isRewatch: false, rewatchNotes: '', recommendedBy: '',
+    wantOrder: 0, createdAt: new Date().toISOString()
+  }));
+  wantToWatch.forEach((t,i) => dramas.push({
+    id: uuid(), title: t, type: 'Drama', status: 'Want to Watch',
+    rating: 0, categories: [], service: '', dateStarted: '', dateFinished: '',
+    journal: '', favorite: false, currentEpisode: 0, totalEpisodes: 0,
+    isRewatch: false, rewatchNotes: '', recommendedBy: '',
+    wantOrder: i, createdAt: new Date().toISOString()
+  }));
+  return { dramas, referrals: [], customCats: [], version: 1 };
+}
+
+// ─── State ────────────────────────────────────────────────────────────
+let state = { dramas: [], referrals: [], customCats: [], version: 1 };
+let currentView = 'grid';
+let currentTab = 'dashboard';
+let currentViewId = null;
+let saveTimer = null;
+let driveReady = false;
+let driveFileId = localStorage.getItem(DRIVE_FILE_KEY) || null;
+let pendingSave = false;
+
+// ─── Utilities ────────────────────────────────────────────────────────
+function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const parts = d.split('-');
+  if (parts.length !== 3) return d;
+  return `${parts[1]}/${parts[2]}/${parts[0].slice(2)}`;
+}
+
+function parseDate(s) {
+  if (!s) return '';
+  // Try MM/DD/YY or MM/DD/YYYY
+  const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) {
+    const yr = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${yr}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  }
+  return s;
+}
+
+function toast(msg, dur = 2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function renderStars(rating, size = 14) {
+  if (!rating) return '<span style="color:var(--star-empty);font-size:' + size + 'px">☆☆☆☆☆</span>';
+  let s = '';
+  for (let i = 1; i <= 5; i++) {
+    if (rating >= i) s += `<span style="color:var(--star);font-size:${size}px">★</span>`;
+    else s += `<span style="color:var(--star-empty);font-size:${size}px">☆</span>`;
+  }
+  return s;
+}
+
+function statusClass(s) {
+  if (s === 'Watched') return 'status-watched';
+  if (s === 'Watching') return 'status-watching';
+  return 'status-want';
+}
+
+function allCats() {
+  return [...new Set([...DEFAULT_CATS, ...(state.customCats || [])])];
+}
+
+// ─── Storage ──────────────────────────────────────────────────────────
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      state = JSON.parse(raw);
+      if (!state.customCats) state.customCats = [];
+    } else {
+      state = makeSeedData();
+      saveLocal();
+    }
+  } catch(e) {
+    state = makeSeedData();
+    saveLocal();
+  }
+}
+
+function saveLocal() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function scheduleSave() {
+  setSaveStatus('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveLocal();
+    if (driveReady) saveToDrive();
+    else setSaveStatus('saved');
+  }, 600);
+}
+
+function setSaveStatus(s) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  if (s === 'saving') el.textContent = '⏳ Saving…';
+  else if (s === 'saved') el.textContent = '✓ Saved';
+  else if (s === 'error') el.textContent = '⚠️ Save failed';
+}
+
+function forceSave() {
+  saveLocal();
+  if (driveReady) saveToDrive();
+  else { toast('Saved locally'); setSaveStatus('saved'); }
+}
+
+// ─── Google Drive ─────────────────────────────────────────────────────
+let gapiInited = false;
+
+function loadGapi() {
+  if (typeof gapi === 'undefined') return;
+  const clientId = localStorage.getItem(CLIENT_ID_KEY);
+  if (!clientId) return;
+  gapi.load('client:auth2', async () => {
+    try {
+      await gapi.client.init({
+        clientId,
+        scope: 'https://www.googleapis.com/auth/drive.appdata',
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+      });
+      gapiInited = true;
+      const isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
+      if (isSignedIn) { driveReady = true; loadFromDrive(); }
+      renderDriveStatus();
+    } catch(e) { renderDriveStatus(); }
+  });
+}
+
+function connectDrive() {
+  if (!gapiInited) { toast('Enter and save your Client ID first'); return; }
+  gapi.auth2.getAuthInstance().signIn().then(() => {
+    driveReady = true;
+    renderDriveStatus();
+    loadFromDrive();
+    toast('Connected to Google Drive ☁️');
+  }).catch(e => { toast('Sign-in cancelled'); });
+}
+
+function disconnectDrive() {
+  if (!gapiInited) return;
+  gapi.auth2.getAuthInstance().signOut().then(() => {
+    driveReady = false;
+    driveFileId = null;
+    localStorage.removeItem(DRIVE_FILE_KEY);
+    renderDriveStatus();
+    toast('Disconnected from Drive');
+  });
+}
+
+async function saveToDrive() {
+  if (!driveReady) return;
+  const content = JSON.stringify(state, null, 2);
+  try {
+    if (driveFileId) {
+      await gapi.client.request({
+        path: `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}`,
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        headers: { 'Content-Type': 'application/json' },
+        body: content
+      });
+    } else {
+      const meta = await gapi.client.drive.files.create({
+        resource: { name: FILE_NAME, parents: ['appDataFolder'] },
+        fields: 'id'
+      });
+      driveFileId = meta.result.id;
+      localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
+      await gapi.client.request({
+        path: `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}`,
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        headers: { 'Content-Type': 'application/json' },
+        body: content
+      });
+    }
+    setSaveStatus('saved');
+  } catch(e) {
+    setSaveStatus('error');
+    toast('Drive save failed — saved locally');
+  }
+}
+
+async function loadFromDrive() {
+  if (!driveReady) return;
+  try {
+    let fileId = driveFileId;
+    if (!fileId) {
+      const r = await gapi.client.drive.files.list({
+        spaces: 'appDataFolder',
+        fields: 'files(id,name)',
+        q: `name='${FILE_NAME}'`
+      });
+      if (r.result.files.length > 0) {
+        fileId = r.result.files[0].id;
+        driveFileId = fileId;
+        localStorage.setItem(DRIVE_FILE_KEY, fileId);
+      }
+    }
+    if (fileId) {
+      const r = await gapi.client.request({
+        path: `https://www.googleapis.com/drive/v3/files/${fileId}`,
+        params: { alt: 'media' }
+      });
+      const remote = typeof r.result === 'string' ? JSON.parse(r.result) : r.result;
+      if (remote && remote.dramas) {
+        state = remote;
+        if (!state.customCats) state.customCats = [];
+        saveLocal();
+        renderAll();
+        toast('Loaded from Google Drive ☁️');
+      }
+    }
+  } catch(e) { /* use local */ }
+}
+
+function renderDriveStatus() {
+  const el = document.getElementById('drive-status-settings');
+  if (!el) return;
+  const clientId = localStorage.getItem(CLIENT_ID_KEY);
+  const cInput = document.getElementById('client-id-input');
+  if (cInput && clientId) cInput.value = clientId;
+  const connectBtn = document.getElementById('btn-connect-drive');
+  const disconnectBtn = document.getElementById('btn-disconnect-drive');
+  if (!clientId) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text2)">Enter your Client ID below to enable Drive sync.</p>';
+    if (connectBtn) connectBtn.style.display = 'none';
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+    return;
+  }
+  if (!gapiInited) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text2)">Google API loading… (make sure you\'re serving this file over http, not file://)</p>';
+    if (connectBtn) connectBtn.style.display = 'inline-flex';
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+    return;
+  }
+  if (driveReady) {
+    el.innerHTML = '<div class="drive-banner ok">☁️ Connected to Google Drive — your data syncs automatically.</div>';
+    if (connectBtn) connectBtn.style.display = 'none';
+    if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+  } else {
+    el.innerHTML = '<div class="drive-banner warn">⚠️ Not connected — data saved locally only.</div>';
+    if (connectBtn) connectBtn.style.display = 'inline-flex';
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+  }
+}
+
+function saveClientId() {
+  const v = document.getElementById('client-id-input').value.trim();
+  if (!v) { toast('Enter a Client ID first'); return; }
+  localStorage.setItem(CLIENT_ID_KEY, v);
+  toast('Client ID saved — reload to initialize');
+  loadGapi();
+  renderDriveStatus();
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────
+function goTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`nav button[data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'list') renderList();
+  if (tab === 'referrals') renderReferrals();
+  if (tab === 'settings') renderDriveStatus();
+  window.scrollTo(0, 0);
+}
+
+function handleFab() {
+  if (currentTab === 'referrals') openModal('add-referral');
+  else openModal('add-drama');
+}
+
+// ─── Dashboard ───────────────────────────────────────────────────────
+function renderDashboard() {
+  const watched = state.dramas.filter(d => d.status === 'Watched');
+  const watching = state.dramas.filter(d => d.status === 'Watching');
+  const want = state.dramas.filter(d => d.status === 'Want to Watch');
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${watched.length}</div><div class="stat-label">Watched</div></div>
+    <div class="stat-card"><div class="stat-num">${watching.length}</div><div class="stat-label">Watching</div></div>
+    <div class="stat-card"><div class="stat-num">${want.length}</div><div class="stat-label">Want to Watch</div></div>
+  `;
+
+  // Favorites
+  const favs = state.dramas.filter(d => d.favorite);
+  const favEl = document.getElementById('dash-favorites');
+  if (favs.length === 0) {
+    favEl.innerHTML = '<div style="font-size:13px;color:var(--text3)">Heart your favorites to see them here.</div>';
+  } else {
+    favEl.innerHTML = '<div class="drama-grid">' + favs.slice(0,6).map(dramaMiniCard).join('') + '</div>';
+  }
+
+  // Watching now
+  const watchEl = document.getElementById('dash-watching');
+  if (watching.length === 0) {
+    watchEl.innerHTML = '<div style="font-size:13px;color:var(--text3)">Nothing in progress right now.</div>';
+  } else {
+    watchEl.innerHTML = '<div class="drama-grid">' + watching.map(dramaMiniCard).join('') + '</div>';
+  }
+
+  // Recent journal
+  const withJournal = state.dramas.filter(d => d.journal && d.journal.trim()).sort((a,b) => (b.dateFinished||'').localeCompare(a.dateFinished||'')).slice(0,3);
+  const journalEl = document.getElementById('dash-recent');
+  if (withJournal.length === 0) {
+    journalEl.innerHTML = '<div style="font-size:13px;color:var(--text3)">Add journal entries to your dramas to see them here.</div>';
+  } else {
+    journalEl.innerHTML = withJournal.map(d => `
+      <div class="card" style="cursor:pointer" onclick="viewDrama('${d.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <strong style="font-size:14px">${d.title}</strong>
+          <span style="font-size:12px;color:var(--text3)">${fmtDate(d.dateFinished)}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${d.journal}</div>
+      </div>
+    `).join('');
+  }
+
+  // Category breakdown
+  const catCounts = {};
+  state.dramas.filter(d => d.status === 'Watched').forEach(d => {
+    (d.categories || []).forEach(c => { catCounts[c] = (catCounts[c]||0)+1; });
+  });
+  const sorted = Object.entries(catCounts).sort((a,b) => b[1]-a[1]).slice(0,8);
+  const max = sorted[0]?.[1] || 1;
+  const catEl = document.getElementById('dash-cats');
+  if (sorted.length === 0) {
+    catEl.innerHTML = '<div style="font-size:13px;color:var(--text3)">Add categories to your dramas to see a breakdown.</div>';
+  } else {
+    catEl.innerHTML = sorted.map(([c,n]) => `
+      <div class="cat-bar">
+        <div class="cat-row">
+          <span class="cat-name">${c}</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${(n/max*100).toFixed(0)}%"></div></div>
+          <span class="cat-count">${n}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Drive banner
+  const db = document.getElementById('drive-banner');
+  if (!driveReady) {
+    db.innerHTML = '<div class="drive-banner" style="margin-bottom:14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 2L2 19.5h20L12 2z"/><path d="M12 9v4M12 17h.01"/></svg> Data is saved locally. <a href="#" onclick="goTab(\'settings\');return false;" style="color:var(--blue);font-weight:600;margin-left:4px">Set up Drive sync →</a></div>';
+  } else {
+    db.innerHTML = '';
+  }
+}
+
+function dramaMiniCard(d) {
+  return `<div class="drama-card" onclick="viewDrama('${d.id}')">
+    ${d.favorite ? '<span class="heart">❤️</span>' : ''}
+    <div class="title">${d.title}</div>
+    <div class="meta">
+      <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}" style="font-size:10px;padding:2px 7px">${d.type}</span>
+      ${d.rating ? renderStars(d.rating, 12) : ''}
+      ${d.service ? `<span style="color:var(--text3);font-size:11px">${d.service}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+// ─── List ─────────────────────────────────────────────────────────────
+function setView(v) {
+  currentView = v;
+  document.getElementById('view-grid-btn').className = v === 'grid' ? 'active' : '';
+  document.getElementById('view-table-btn').className = v === 'table' ? 'active' : '';
+  renderList();
+}
+
+function renderList() {
+  // Populate category filter
+  const catSel = document.getElementById('filter-cat');
+  const curCat = catSel.value;
+  catSel.innerHTML = '<option value="">All categories</option>' + allCats().map(c => `<option ${curCat===c?'selected':''} value="${c}">${c}</option>`).join('');
+
+  const search = document.getElementById('search').value.toLowerCase();
+  const type = document.getElementById('filter-type').value;
+  const status = document.getElementById('filter-status').value;
+  const cat = document.getElementById('filter-cat').value;
+  const sort = document.getElementById('sort-by').value;
+
+  let items = state.dramas.filter(d => {
+    if (search && !d.title.toLowerCase().includes(search) && !(d.journal||'').toLowerCase().includes(search)) return false;
+    if (type && d.type !== type) return false;
+    if (status && d.status !== status) return false;
+    if (cat && !(d.categories||[]).includes(cat)) return false;
+    return true;
+  });
+
+  const [sortKey, sortDir] = sort.split('-');
+  items.sort((a, b) => {
+    let va = a[sortKey === 'dateFinished' ? 'dateFinished' : sortKey] || '';
+    let vb = b[sortKey === 'dateFinished' ? 'dateFinished' : sortKey] || '';
+    if (sortKey === 'rating') { va = parseFloat(va)||0; vb = parseFloat(vb)||0; }
+    if (sortDir === 'asc') return va > vb ? 1 : -1;
+    return va < vb ? 1 : -1;
+  });
+
+  // Status tab pills
+  const counts = {all: state.dramas.length, Watched: 0, Watching: 0, 'Want to Watch': 0};
+  state.dramas.forEach(d => counts[d.status] = (counts[d.status]||0)+1);
+  const tabsEl = document.getElementById('list-status-tabs');
+  const activeStatus = document.getElementById('filter-status').value;
+  tabsEl.innerHTML = [['','All',counts.all],['Watched','Watched',counts.Watched],['Watching','Watching',counts.Watching],['Want to Watch','Want',counts['Want to Watch']]].map(([v,l,c]) =>
+    `<button onclick="document.getElementById('filter-status').value='${v}';renderList()" style="background:${activeStatus===v?'var(--accent)':'var(--card)'};color:${activeStatus===v?'white':'var(--text2)'};border:1px solid ${activeStatus===v?'var(--accent)':'var(--border)'};border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:var(--font)">${l} <span style="opacity:0.7">${c}</span></button>`
+  ).join('');
+
+  const el = document.getElementById('list-content');
+  if (items.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="emoji">🎬</div><p>No dramas match your filters.</p></div>';
+    return;
+  }
+
+  // Want to Watch: show with drag ordering if unfiltered
+  if (!status && !search && !type && !cat && activeStatus === 'Want to Watch') {
+    renderWantList(el, items.filter(d => d.status === 'Want to Watch'));
+    return;
+  }
+
+  if (currentView === 'table') {
+    el.innerHTML = renderTableView(items);
+  } else {
+    // Group by status if showing all
+    if (!status && !search && !type && !cat && activeStatus === '') {
+      let html = '';
+      ['Watching','Watched','Want to Watch'].forEach(s => {
+        const group = items.filter(d => d.status === s);
+        if (!group.length) return;
+        html += `<div class="section-title" style="margin-top:16px">${s === 'Watched' ? '✅' : s === 'Watching' ? '▶️' : '📋'} ${s} <span class="count">${group.length}</span></div>`;
+        html += `<div class="drama-grid">` + group.map(d => dramaCard(d)).join('') + `</div>`;
+      });
+      el.innerHTML = html;
+    } else {
+      el.innerHTML = `<div class="drama-grid">` + items.map(d => dramaCard(d)).join('') + `</div>`;
+    }
+  }
+}
+
+function dramaCard(d) {
+  const ep = d.status === 'Watching' && d.totalEpisodes
+    ? `<span style="font-size:11px;color:var(--accent)">Ep ${d.currentEpisode||0}/${d.totalEpisodes}</span>` : '';
+  const cats = (d.categories||[]).slice(0,2).map(c => `<span class="tag" style="font-size:10px;padding:2px 7px">${c}</span>`).join('');
+  return `<div class="drama-card" onclick="viewDrama('${d.id}')">
+    ${d.favorite ? '<span class="heart">❤️</span>' : ''}
+    <div class="title">${d.title}</div>
+    <div class="meta">
+      <span><span class="status-dot ${statusClass(d.status)}"></span><span style="font-size:11px">${d.status}</span></span>
+      <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}" style="font-size:10px;padding:2px 7px">${d.type}</span>
+      ${d.rating ? renderStars(d.rating, 12) : ''}
+      ${ep}
+      ${d.dateFinished ? `<span style="font-size:11px;color:var(--text3)">${fmtDate(d.dateFinished)}</span>` : ''}
+      ${d.service ? `<span style="font-size:11px;color:var(--text3)">${d.service}</span>` : ''}
+      <div class="tags" style="margin-top:2px">${cats}</div>
+    </div>
+  </div>`;
+}
+
+function renderTableView(items) {
+  return `<div class="drama-table-wrap"><table class="drama-table">
+    <thead><tr>
+      <th>Title</th><th>Type</th><th>Status</th><th>Rating</th><th>Finished</th><th>Service</th>
+    </tr></thead>
+    <tbody>
+      ${items.map(d => `<tr onclick="viewDrama('${d.id}')">
+        <td><strong>${d.title}</strong>${d.favorite ? ' ❤️' : ''}</td>
+        <td><span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}" style="font-size:11px">${d.type}</span></td>
+        <td><span class="status-dot ${statusClass(d.status)}"></span> ${d.status}</td>
+        <td>${d.rating ? renderStars(d.rating, 13) : '—'}</td>
+        <td style="color:var(--text2);font-size:12px">${fmtDate(d.dateFinished) || '—'}</td>
+        <td style="color:var(--text2);font-size:12px">${d.service || '—'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+function renderWantList(el, items) {
+  items.sort((a,b) => (a.wantOrder||0) - (b.wantOrder||0));
+  el.innerHTML = `<div class="section-title">📋 Want to Watch <span class="count">${items.length}</span></div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Drag cards to set your watch order.</p>
+    <div class="want-list drama-grid" id="want-drag-grid">
+      ${items.map((d,i) => `<div class="drama-card" draggable="true" data-id="${d.id}" data-idx="${i}">
+        <div class="title">${d.title}</div>
+        <div class="meta">
+          <span class="tag type-drama" style="font-size:10px">${d.type}</span>
+          ${d.recommendedBy ? `<span style="font-size:11px;color:var(--accent)">from ${d.recommendedBy}</span>` : ''}
+        </div>
+        <div style="position:absolute;bottom:8px;right:8px;cursor:pointer;font-size:18px" onclick="event.stopPropagation();viewDrama('${d.id}')">⋯</div>
+      </div>`).join('')}
+    </div>`;
+  setupDrag();
+}
+
+function setupDrag() {
+  const grid = document.getElementById('want-drag-grid');
+  if (!grid) return;
+  let dragEl = null;
+  grid.addEventListener('dragstart', e => {
+    dragEl = e.target.closest('[data-id]');
+    if (!dragEl) return;
+    dragEl.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  grid.addEventListener('dragover', e => {
+    e.preventDefault();
+    const target = e.target.closest('[data-id]');
+    if (!target || target === dragEl) return;
+    grid.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el => el.classList.remove('drag-over-top','drag-over-bottom'));
+    const rect = target.getBoundingClientRect();
+    target.classList.add(e.clientY < rect.top + rect.height / 2 ? 'drag-over-top' : 'drag-over-bottom');
+  });
+  grid.addEventListener('dragend', e => {
+    if (!dragEl) return;
+    dragEl.classList.remove('dragging');
+    const overEl = grid.querySelector('.drag-over-top, .drag-over-bottom');
+    if (overEl && overEl !== dragEl) {
+      const isBefore = overEl.classList.contains('drag-over-top');
+      grid.insertBefore(dragEl, isBefore ? overEl : overEl.nextSibling);
+    }
+    grid.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el => el.classList.remove('drag-over-top','drag-over-bottom'));
+    // Persist order
+    const want = state.dramas.filter(d => d.status === 'Want to Watch');
+    grid.querySelectorAll('[data-id]').forEach((el, i) => {
+      const d = state.dramas.find(d => d.id === el.dataset.id);
+      if (d) d.wantOrder = i;
+    });
+    scheduleSave();
+    dragEl = null;
+  });
+}
+
+// ─── View Drama ───────────────────────────────────────────────────────
+function viewDrama(id) {
+  currentViewId = id;
+  const d = state.dramas.find(x => x.id === id);
+  if (!d) return;
+  const cats = (d.categories||[]).map(c => `<span class="tag">${c}</span>`).join('');
+  const ep = d.status === 'Watching' && (d.currentEpisode || d.totalEpisodes)
+    ? `<div style="margin:6px 0;font-size:13px;color:var(--accent)">Episode ${d.currentEpisode||0}${d.totalEpisodes ? ' of ' + d.totalEpisodes : ''}</div>` : '';
+  document.getElementById('view-drama-content').innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+      <h2 style="font-size:20px;line-height:1.3">${d.title} ${d.favorite ? '❤️' : ''} ${d.isRewatch ? '🔄' : ''}</h2>
+      <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}">${d.type}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <span><span class="status-dot ${statusClass(d.status)}"></span> <strong>${d.status}</strong></span>
+      ${d.rating ? `<span>${renderStars(d.rating, 18)}</span>` : ''}
+    </div>
+    ${ep}
+    <div style="font-size:13px;color:var(--text2);display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+      ${d.service ? `<span>📺 ${d.service}</span>` : ''}
+      ${d.dateFinished ? `<span>✅ Finished ${fmtDate(d.dateFinished)}</span>` : ''}
+      ${d.dateStarted ? `<span>▶️ Started ${fmtDate(d.dateStarted)}</span>` : ''}
+      ${d.recommendedBy ? `<span>💌 Rec'd by ${d.recommendedBy}</span>` : ''}
+    </div>
+    ${cats ? `<div class="tags" style="margin-bottom:12px">${cats}</div>` : ''}
+    ${d.journal ? `<div class="section-title">Journal</div><div class="journal-text">${d.journal}</div>` : ''}
+    ${d.isRewatch && d.rewatchNotes ? `<div class="section-title" style="margin-top:12px">Rewatch Notes</div><div class="journal-text">${d.rewatchNotes}</div>` : ''}
+  `;
+  document.getElementById('modal-view').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function editCurrentDrama() {
+  closeModal('modal-view');
+  setTimeout(() => openEditModal(currentViewId), 150);
+}
+
+function deleteDramaConfirm() {
+  if (!confirm('Delete this drama? This can\'t be undone.')) return;
+  state.dramas = state.dramas.filter(d => d.id !== currentViewId);
+  scheduleSave();
+  closeModal('modal-view');
+  renderAll();
+  toast('Deleted');
+}
+
+// ─── Add / Edit Drama ─────────────────────────────────────────────────
+function openModal(type) {
+  if (type === 'add-drama') {
+    document.getElementById('modal-drama-title').textContent = 'Add Drama';
+    document.getElementById('edit-id').value = '';
+    clearDramaForm();
+    document.getElementById('modal-drama').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('f-title').focus(), 200);
+  } else if (type === 'add-referral') {
+    document.getElementById('modal-ref-title').textContent = 'Add Referral';
+    document.getElementById('edit-ref-id').value = '';
+    clearRefForm();
+    document.getElementById('modal-referral').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('rf-title').focus(), 200);
+  }
+}
+
+function openEditModal(id) {
+  const d = state.dramas.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('modal-drama-title').textContent = 'Edit Drama';
+  document.getElementById('edit-id').value = id;
+  document.getElementById('f-title').value = d.title;
+  document.getElementById('f-type').value = d.type;
+  document.getElementById('f-status').value = d.status;
+  document.getElementById('f-service').value = d.service || '';
+  document.getElementById('f-rec-by').value = d.recommendedBy || '';
+  document.getElementById('f-date-start').value = d.dateStarted || '';
+  document.getElementById('f-date-finish').value = d.dateFinished || '';
+  document.getElementById('f-journal').value = d.journal || '';
+  document.getElementById('f-rewatch-notes').value = d.rewatchNotes || '';
+  document.getElementById('f-favorite').checked = !!d.favorite;
+  document.getElementById('f-rewatch').checked = !!d.isRewatch;
+  document.getElementById('f-ep-current').value = d.currentEpisode || '';
+  document.getElementById('f-ep-total').value = d.totalEpisodes || '';
+  setStarInputValue(d.rating || 0);
+  renderCatTags(d.categories || []);
+  toggleEpisodeField();
+  toggleRewatchSection();
+  document.getElementById('modal-drama').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function clearDramaForm() {
+  ['f-title','f-service','f-rec-by','f-date-start','f-date-finish','f-journal','f-rewatch-notes','f-ep-current','f-ep-total'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-type').value = 'Drama';
+  document.getElementById('f-status').value = 'Watched';
+  document.getElementById('f-favorite').checked = false;
+  document.getElementById('f-rewatch').checked = false;
+  setStarInputValue(0);
+  renderCatTags([]);
+  toggleEpisodeField();
+  toggleRewatchSection();
+}
+
+function toggleEpisodeField() {
+  const s = document.getElementById('f-status').value;
+  document.getElementById('episode-field').style.display = s === 'Watching' ? 'block' : 'none';
+}
+
+function toggleRewatchSection() {
+  const on = document.getElementById('f-rewatch').checked;
+  document.getElementById('rewatch-section').style.display = on ? 'block' : 'none';
+}
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'f-rewatch') toggleRewatchSection();
+});
+
+function renderCatTags(selected) {
+  const el = document.getElementById('cat-tags');
+  el.innerHTML = allCats().map(c => `
+    <span class="tag-toggle ${selected.includes(c)?'selected':''}" onclick="toggleCat(this,'${c}')">${c}</span>
+  `).join('');
+}
+
+function toggleCat(el, cat) {
+  el.classList.toggle('selected');
+}
+
+function addCustomCat() {
+  const inp = document.getElementById('new-cat-input');
+  const v = inp.value.trim();
+  if (!v) return;
+  if (!state.customCats.includes(v)) {
+    state.customCats.push(v);
+    scheduleSave();
+  }
+  const selected = getSelectedCats();
+  renderCatTags([...selected, v]);
+  // Re-select the ones that were selected before + new one
+  inp.value = '';
+}
+
+function getSelectedCats() {
+  return [...document.querySelectorAll('#cat-tags .tag-toggle.selected')].map(el => el.textContent);
+}
+
+// Star input
+function setStarInputValue(v) {
+  const el = document.getElementById('star-input');
+  if (!el) return;
+  el.dataset.value = v;
+  el.querySelectorAll('span').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.v) <= v);
+  });
+}
+
+document.addEventListener('click', e => {
+  const s = e.target.closest('#star-input span');
+  if (!s) return;
+  const v = parseInt(s.dataset.v);
+  setStarInputValue(v);
+});
+
+function saveDrama() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('Please enter a title'); return; }
+  const id = document.getElementById('edit-id').value;
+  const rating = parseInt(document.getElementById('star-input').dataset.value) || 0;
+  const categories = getSelectedCats();
+  const data = {
+    title, type: document.getElementById('f-type').value,
+    status: document.getElementById('f-status').value,
+    rating, categories,
+    service: document.getElementById('f-service').value.trim(),
+    recommendedBy: document.getElementById('f-rec-by').value.trim(),
+    dateStarted: document.getElementById('f-date-start').value,
+    dateFinished: document.getElementById('f-date-finish').value,
+    journal: document.getElementById('f-journal').value,
+    rewatchNotes: document.getElementById('f-rewatch-notes').value,
+    favorite: document.getElementById('f-favorite').checked,
+    isRewatch: document.getElementById('f-rewatch').checked,
+    currentEpisode: parseInt(document.getElementById('f-ep-current').value) || 0,
+    totalEpisodes: parseInt(document.getElementById('f-ep-total').value) || 0,
+  };
+  if (id) {
+    const idx = state.dramas.findIndex(d => d.id === id);
+    if (idx >= 0) state.dramas[idx] = { ...state.dramas[idx], ...data };
+  } else {
+    const wantCount = state.dramas.filter(d => d.status === 'Want to Watch').length;
+    state.dramas.push({ id: uuid(), ...data, wantOrder: data.status === 'Want to Watch' ? wantCount : 0, createdAt: new Date().toISOString() });
+  }
+  scheduleSave();
+  closeModal('modal-drama');
+  renderAll();
+  toast(id ? 'Updated ✓' : 'Added ✓');
+}
+
+// ─── Referrals ────────────────────────────────────────────────────────
+function renderReferrals() {
+  const el = document.getElementById('referrals-list');
+  const empty = document.getElementById('referrals-empty');
+  const active = state.referrals.filter(r => !r.movedToList);
+  if (active.length === 0) { el.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  el.innerHTML = active.map(r => `
+    <div class="ref-card">
+      <div class="ref-title">${r.title}</div>
+      <div class="ref-from">💌 from ${r.recommendedBy}</div>
+      ${r.notes ? `<div class="ref-note">${r.notes}</div>` : ''}
+      <div class="ref-footer">
+        <span class="ref-date">${r.dateRecommended ? fmtDate(r.dateRecommended) : ''}</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn small secondary" onclick="editReferral('${r.id}')">Edit</button>
+          <button class="btn small" onclick="moveRefToList('${r.id}')">Add to my list</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearRefForm() {
+  ['rf-title','rf-by','rf-notes','rf-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function saveReferral() {
+  const title = document.getElementById('rf-title').value.trim();
+  const by = document.getElementById('rf-by').value.trim();
+  if (!title || !by) { toast('Title and recommender required'); return; }
+  const id = document.getElementById('edit-ref-id').value;
+  const data = { title, recommendedBy: by, notes: document.getElementById('rf-notes').value, dateRecommended: document.getElementById('rf-date').value, movedToList: false };
+  if (id) {
+    const idx = state.referrals.findIndex(r => r.id === id);
+    if (idx >= 0) state.referrals[idx] = { ...state.referrals[idx], ...data };
+  } else {
+    state.referrals.push({ id: uuid(), ...data });
+  }
+  scheduleSave();
+  closeModal('modal-referral');
+  renderReferrals();
+  toast('Referral saved ✓');
+}
+
+function editReferral(id) {
+  const r = state.referrals.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modal-ref-title').textContent = 'Edit Referral';
+  document.getElementById('edit-ref-id').value = id;
+  document.getElementById('rf-title').value = r.title;
+  document.getElementById('rf-by').value = r.recommendedBy;
+  document.getElementById('rf-notes').value = r.notes || '';
+  document.getElementById('rf-date').value = r.dateRecommended || '';
+  document.getElementById('modal-referral').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function moveRefToList(id) {
+  const r = state.referrals.find(x => x.id === id);
+  if (!r) return;
+  r.movedToList = true;
+  const wantCount = state.dramas.filter(d => d.status === 'Want to Watch').length;
+  state.dramas.push({
+    id: uuid(), title: r.title, type: 'Drama', status: 'Want to Watch',
+    rating: 0, categories: [], service: '', dateStarted: '', dateFinished: '',
+    journal: '', favorite: false, currentEpisode: 0, totalEpisodes: 0,
+    isRewatch: false, rewatchNotes: '', recommendedBy: r.recommendedBy,
+    wantOrder: wantCount, createdAt: new Date().toISOString()
+  });
+  scheduleSave();
+  renderReferrals();
+  renderAll();
+  toast(`"${r.title}" added to Want to Watch`);
+}
+
+// ─── CSV Import ───────────────────────────────────────────────────────
+function handleCsvFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => parseAndPreviewCsv(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseAndPreviewCsv(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { toast('CSV appears empty'); return; }
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+
+  const col = name => {
+    const aliases = {
+      title: ['title','name','show'],
+      type: ['type','genre'],
+      service: ['service','platform','where','streaming'],
+      status: ['status','state'],
+      dateFinished: ['date finished','date','finished','date_finished','datefinished'],
+      rating: ['rating','score','stars'],
+      notes: ['notes','journal','review','comment']
+    };
+    const alts = aliases[name] || [name];
+    for (const a of alts) {
+      const i = headers.indexOf(a);
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+
+  const rows = lines.slice(1).map(line => {
+    const cells = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cells.push(cur.trim());
+    return cells;
+  }).filter(r => r.some(c => c));
+
+  const existingTitles = new Set(state.dramas.map(d => d.title.toLowerCase()));
+
+  const preview = rows.map(r => {
+    const title = r[col('title')] || '';
+    const type = r[col('type')] || 'Drama';
+    const service = r[col('service')] || '';
+    const status = r[col('status')] || 'Watched';
+    const df = r[col('dateFinished')] || '';
+    const rating = parseFloat(r[col('rating')]) || 0;
+    const notes = r[col('notes')] || '';
+    const isDup = existingTitles.has(title.toLowerCase());
+    return { title, type: type || 'Drama', service, status: status || 'Watched', dateFinished: parseDate(df), rating, notes, isDup, include: !isDup };
+  }).filter(r => r.title);
+
+  const wrap = document.getElementById('import-preview-wrap');
+  if (!preview.length) { wrap.innerHTML = '<p style="color:var(--text2);font-size:13px;margin-top:10px">No rows found.</p>'; return; }
+
+  wrap.innerHTML = `
+    <div class="import-preview">
+      <table>
+        <thead><tr><th><input type="checkbox" class="import-check" id="check-all" checked onchange="toggleAllImport(this)"></th><th>Title</th><th>Type</th><th>Service</th><th>Status</th><th>Date</th><th>Rating</th></tr></thead>
+        <tbody>${preview.map((r,i) => `
+          <tr class="${r.isDup?'dup':''}">
+            <td><input type="checkbox" class="import-check row-check" data-idx="${i}" ${r.include?'checked':''}></td>
+            <td>${r.title} ${r.isDup ? '<span class="dup-badge">duplicate</span>' : '<span class="new-badge">new</span>'}</td>
+            <td>${r.type}</td><td>${r.service||'—'}</td><td>${r.status}</td>
+            <td style="font-size:11px">${r.dateFinished||'—'}</td><td>${r.rating||'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+      <span style="font-size:12px;color:var(--text2)">${preview.filter(r=>!r.isDup).length} new, ${preview.filter(r=>r.isDup).length} duplicates</span>
+      <button class="btn small" onclick="doImport(${JSON.stringify(preview).replace(/"/g,'&quot;')})">Import Selected</button>
+    </div>
+  `;
+  window._importPreview = preview;
+}
+
+function toggleAllImport(cb) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+}
+
+function doImport(previewData) {
+  const checked = [...document.querySelectorAll('.row-check')].map((c,i) => c.checked ? i : -1).filter(i => i >= 0);
+  const preview = window._importPreview || previewData;
+  let added = 0;
+  checked.forEach(i => {
+    const r = preview[i];
+    if (!r) return;
+    const dup = state.dramas.find(d => d.title.toLowerCase() === r.title.toLowerCase());
+    if (dup) return; // skip dups even if checked
+    state.dramas.push({
+      id: uuid(), title: r.title, type: r.type, status: r.status,
+      rating: r.rating, categories: [], service: r.service,
+      dateStarted: '', dateFinished: r.dateFinished,
+      journal: r.notes, favorite: false, currentEpisode: 0, totalEpisodes: 0,
+      isRewatch: false, rewatchNotes: '', recommendedBy: '',
+      wantOrder: 0, createdAt: new Date().toISOString()
+    });
+    added++;
+  });
+  scheduleSave();
+  renderAll();
+  document.getElementById('import-preview-wrap').innerHTML = `<div style="background:var(--green-bg);color:var(--green);border-radius:var(--radius-sm);padding:12px;margin-top:10px;font-size:14px">✅ Imported ${added} dramas successfully!</div>`;
+  toast(`Imported ${added} dramas`);
+}
+
+// Drag-drop CSV
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.csv')) { const r = new FileReader(); r.onload = ev => parseAndPreviewCsv(ev.target.result); r.readAsText(f); }
+});
+
+// ─── Modals ───────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+// Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') ['modal-drama','modal-view','modal-referral'].forEach(id => {
+    if (document.getElementById(id).style.display !== 'none') closeModal(id);
+  });
+});
+
+// ─── Danger ───────────────────────────────────────────────────────────
+function clearAllData() {
+  if (!confirm('This will delete ALL your dramas and referrals. Are you absolutely sure?')) return;
+  if (!confirm('Last chance — this cannot be undone.')) return;
+  state = { dramas: [], referrals: [], customCats: [], version: 1 };
+  scheduleSave();
+  renderAll();
+  toast('All data cleared');
+}
+
+// ─── Render all ───────────────────────────────────────────────────────
+function renderAll() {
+  if (currentTab === 'dashboard') renderDashboard();
+  if (currentTab === 'list') renderList();
+  if (currentTab === 'referrals') renderReferrals();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────
+loadLocal();
+renderDashboard();
+renderDriveStatus();
+
+// Load gapi if configured
+if (localStorage.getItem(CLIENT_ID_KEY)) {
+  const s = document.createElement('script');
+  s.src = 'https://apis.google.com/js/api.js';
+  s.onload = loadGapi;
+  document.head.appendChild(s);
+}
+
+// Online/offline
+window.addEventListener('online', () => { if (driveReady) saveToDrive(); });
+
+// Init category filter
+document.addEventListener('DOMContentLoaded', () => {
+  const catSel = document.getElementById('filter-cat');
+  allCats().forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+});
+</script>
+</body>
+</html>
