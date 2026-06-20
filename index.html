@@ -631,13 +631,13 @@ function toast(msg, dur = 2000) {
 }
 
 function renderStars(rating, size = 14) {
-  if (!rating) return '<span style="color:var(--star-empty);font-size:' + size + 'px">☆☆☆☆☆</span>';
+  if (!rating) return `<span style="color:var(--star-empty);font-size:${size}px;display:inline-flex;flex-direction:row">☆☆☆☆☆</span>`;
   let s = '';
   for (let i = 1; i <= 5; i++) {
     if (rating >= i) s += `<span style="color:var(--star);font-size:${size}px">★</span>`;
     else s += `<span style="color:var(--star-empty);font-size:${size}px">☆</span>`;
   }
-  return s;
+  return `<span style="display:inline-flex;flex-direction:row">${s}</span>`;
 }
 
 function statusClass(s) {
