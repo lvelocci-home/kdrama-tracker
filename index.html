@@ -363,36 +363,6 @@ main { padding: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)); min-height
       <div id="import-preview-wrap"></div>
     </div>
 
-    <div class="card" style="margin-top:12px">
-      <div class="section-title" style="margin-bottom:10px">⚙️ Drive Setup Guide</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">To save to your Google Drive, you need a free Google Cloud project with OAuth. One-time setup, takes ~10 minutes.</p>
-      <div class="setup-step">
-        <div class="num">1</div>
-        <div class="desc">Go to <strong>console.cloud.google.com</strong>, sign in, and create a new project (name it anything, e.g. "KDrama Tracker").</div>
-      </div>
-      <div class="setup-step">
-        <div class="num">2</div>
-        <div class="desc">In the project, go to <strong>APIs & Services → Enable APIs</strong>. Search for "Google Drive API" and click Enable.</div>
-      </div>
-      <div class="setup-step">
-        <div class="num">3</div>
-        <div class="desc">Go to <strong>APIs & Services → OAuth consent screen</strong>. Choose "External", fill in app name ("My K-Drama Year"), save. On the scopes page, add <code>drive.appdata</code> scope.</div>
-      </div>
-      <div class="setup-step">
-        <div class="num">4</div>
-        <div class="desc">Go to <strong>Credentials → Create Credentials → OAuth client ID</strong>. Choose "Web application". Under Authorized JavaScript origins, add the URL where you're running this file (e.g. <code>http://localhost:8080</code>). Copy the <strong>Client ID</strong>.</div>
-      </div>
-      <div class="setup-step">
-        <div class="num">5</div>
-        <div class="desc">Paste your Client ID below and click Save. Then click Connect Drive above.</div>
-      </div>
-      <div class="form-group" style="margin-top:8px;">
-        <label>Google OAuth Client ID</label>
-        <input type="text" id="client-id-input" placeholder="xxxxxxxxx.apps.googleusercontent.com" value="">
-      </div>
-      <button class="btn small" onclick="saveClientId()">Save Client ID</button>
-      <p style="font-size:12px;color:var(--text3);margin-top:8px;">Your Client ID is stored only in your browser. Your drama data is stored only in your Google Drive.</p>
-    </div>
 
     <div class="card" style="margin-top:12px">
       <div class="section-title" style="margin-bottom:10px">🗑️ Danger Zone</div>
@@ -839,20 +809,11 @@ async function loadFromDrive() {
 function renderDriveStatus() {
   const el = document.getElementById('drive-status-settings');
   if (!el) return;
-  const clientId = localStorage.getItem(CLIENT_ID_KEY);
-  const cInput = document.getElementById('client-id-input');
-  if (cInput && clientId) cInput.value = clientId;
   const connectBtn = document.getElementById('btn-connect-drive');
   const disconnectBtn = document.getElementById('btn-disconnect-drive');
-  if (!clientId) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--text2)">Enter your Client ID below to enable Drive sync.</p>';
-    if (connectBtn) connectBtn.style.display = 'none';
-    if (disconnectBtn) disconnectBtn.style.display = 'none';
-    return;
-  }
   if (!gapiInited) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--text2)">Google API loading… (make sure you\'re serving this file over http, not file://)</p>';
-    if (connectBtn) connectBtn.style.display = 'inline-flex';
+    el.innerHTML = '<div class="drive-banner warn">⏳ Connecting to Google…</div>';
+    if (connectBtn) connectBtn.style.display = 'none';
     if (disconnectBtn) disconnectBtn.style.display = 'none';
     return;
   }
@@ -861,7 +822,7 @@ function renderDriveStatus() {
     if (connectBtn) connectBtn.style.display = 'none';
     if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
   } else {
-    el.innerHTML = '<div class="drive-banner warn">⚠️ Not connected — data saved locally only.</div>';
+    el.innerHTML = '<div class="drive-banner warn">⚠️ Not connected — tap Connect Drive to sync across devices.</div>';
     if (connectBtn) connectBtn.style.display = 'inline-flex';
     if (disconnectBtn) disconnectBtn.style.display = 'none';
   }
