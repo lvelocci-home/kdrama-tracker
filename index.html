@@ -698,45 +698,56 @@ function forceSave() {
 // ─── Google Drive ─────────────────────────────────────────────────────
 let gapiInited = false;
 
+let tokenClient = null;
+let gsiInited = false;
+
 function loadGapi() {
   if (typeof gapi === 'undefined') return;
-  if (!localStorage.getItem(CLIENT_ID_KEY)) localStorage.setItem(CLIENT_ID_KEY, HARDCODED_CLIENT_ID);
-  const clientId = localStorage.getItem(CLIENT_ID_KEY);
-  if (!clientId) return;
-  gapi.load('client:auth2', async () => {
+  gapi.load('client', async () => {
     try {
-      await gapi.client.init({
-        clientId,
-        scope: 'https://www.googleapis.com/auth/drive.appdata',
-        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
-      });
+      await gapi.client.init({});
+      await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
       gapiInited = true;
-      const isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
-      if (isSignedIn) { driveReady = true; loadFromDrive(); }
       renderDriveStatus();
-    } catch(e) { renderDriveStatus(); }
+    } catch(e) { console.error('gapi init error', e); renderDriveStatus(); }
   });
+}
+
+function loadGsi() {
+  if (typeof google === 'undefined') return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: HARDCODED_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/drive.appdata',
+    callback: (response) => {
+      if (response.error) { toast('Sign-in failed'); return; }
+      driveReady = true;
+      localStorage.setItem('kdrama_drive_authed', '1');
+      renderDriveStatus();
+      loadFromDrive();
+      toast('Connected to Google Drive ☁️');
+    }
+  });
+  gsiInited = true;
+  if (localStorage.getItem('kdrama_drive_authed')) {
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
+  renderDriveStatus();
 }
 
 function connectDrive() {
-  if (!gapiInited) { toast('Enter and save your Client ID first'); return; }
-  gapi.auth2.getAuthInstance().signIn().then(() => {
-    driveReady = true;
-    renderDriveStatus();
-    loadFromDrive();
-    toast('Connected to Google Drive ☁️');
-  }).catch(e => { toast('Sign-in cancelled'); });
+  if (!gsiInited) { toast('Still loading — try again in a moment'); return; }
+  tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
 function disconnectDrive() {
-  if (!gapiInited) return;
-  gapi.auth2.getAuthInstance().signOut().then(() => {
-    driveReady = false;
-    driveFileId = null;
-    localStorage.removeItem(DRIVE_FILE_KEY);
-    renderDriveStatus();
-    toast('Disconnected from Drive');
-  });
+  google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, () => {});
+  gapi.client.setToken(null);
+  driveReady = false;
+  driveFileId = null;
+  localStorage.removeItem(DRIVE_FILE_KEY);
+  localStorage.removeItem('kdrama_drive_authed');
+  renderDriveStatus();
+  toast('Disconnected from Drive');
 }
 
 async function saveToDrive() {
@@ -811,7 +822,7 @@ function renderDriveStatus() {
   if (!el) return;
   const connectBtn = document.getElementById('btn-connect-drive');
   const disconnectBtn = document.getElementById('btn-disconnect-drive');
-  if (!gapiInited) {
+  if (!gsiInited) {
     el.innerHTML = '<div class="drive-banner warn">⏳ Connecting to Google…</div>';
     if (connectBtn) connectBtn.style.display = 'none';
     if (disconnectBtn) disconnectBtn.style.display = 'none';
@@ -1554,11 +1565,15 @@ loadLocal();
 renderDashboard();
 renderDriveStatus();
 
-// Load gapi
-const s = document.createElement('script');
-s.src = 'https://apis.google.com/js/api.js';
-s.onload = loadGapi;
-document.head.appendChild(s);
+// Load gapi + GSI
+const s1 = document.createElement('script');
+s1.src = 'https://apis.google.com/js/api.js';
+s1.onload = loadGapi;
+document.head.appendChild(s1);
+const s2 = document.createElement('script');
+s2.src = 'https://accounts.google.com/gsi/client';
+s2.onload = loadGsi;
+document.head.appendChild(s2);
 
 // Online/offline
 window.addEventListener('online', () => { if (driveReady) saveToDrive(); });
