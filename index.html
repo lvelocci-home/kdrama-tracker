@@ -1152,8 +1152,11 @@ function viewDrama(id) {
     ? `<div style="margin:6px 0;font-size:13px;color:var(--accent)">Episode ${d.currentEpisode||0}${d.totalEpisodes ? ' of ' + d.totalEpisodes : ''}</div>` : '';
   document.getElementById('view-drama-content').innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
-      <h2 style="font-size:20px;line-height:1.3">${d.title} ${d.favorite ? '❤️' : ''} ${d.isRewatch ? '🔄' : ''}</h2>
-      <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}">${d.type}</span>
+      <h2 style="font-size:20px;line-height:1.3">${d.title} ${d.isRewatch ? '🔄' : ''}</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button onclick="toggleFavorite('${d.id}')" title="Favorite" style="background:none;border:none;cursor:pointer;font-size:22px;line-height:1;padding:0;filter:${d.favorite ? 'none' : 'grayscale(1) opacity(0.4)'}">❤️</button>
+        <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}">${d.type}</span>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span><span class="status-dot ${statusClass(d.status)}"></span> <strong>${d.status}</strong></span>
@@ -1172,6 +1175,16 @@ function viewDrama(id) {
   `;
   document.getElementById('modal-view').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+}
+
+function toggleFavorite(id) {
+  const d = state.dramas.find(x => x.id === id);
+  if (!d) return;
+  d.favorite = !d.favorite;
+  scheduleSave();
+  viewDrama(id);
+  renderAll();
+  toast(d.favorite ? 'Added to favorites ❤️' : 'Removed from favorites');
 }
 
 function editCurrentDrama() {
