@@ -1277,13 +1277,27 @@ document.addEventListener('change', e => {
 
 function renderCatTags(selected) {
   const el = document.getElementById('cat-tags');
-  el.innerHTML = allCats().map(c => `
-    <span class="tag-toggle ${selected.includes(c)?'selected':''}" onclick="toggleCat(this,'${c}')">${c}</span>
-  `).join('');
+  const custom = state.customCats || [];
+  el.innerHTML = allCats().map(c => {
+    const isCustom = custom.includes(c);
+    const del = isCustom ? `<span onclick="event.stopPropagation();deleteCustomCat('${c.replace(/'/g,"\\'")}')" style="margin-left:6px;font-weight:700;opacity:0.6" title="Delete tag">×</span>` : '';
+    return `<span class="tag-toggle ${selected.includes(c)?'selected':''}" data-cat="${c.replace(/"/g,'&quot;')}" onclick="toggleCat(this)">${c}${del}</span>`;
+  }).join('');
 }
 
-function toggleCat(el, cat) {
+function toggleCat(el) {
   el.classList.toggle('selected');
+}
+
+function deleteCustomCat(cat) {
+  if (!confirm(`Delete the tag "${cat}"? It will be removed from any dramas using it.`)) return;
+  state.customCats = (state.customCats || []).filter(c => c !== cat);
+  state.dramas.forEach(d => { d.categories = (d.categories || []).filter(c => c !== cat); });
+  scheduleSave();
+  const selected = getSelectedCats().filter(c => c !== cat);
+  renderCatTags(selected);
+  renderAll();
+  toast(`Removed tag "${cat}"`);
 }
 
 function addCustomCat() {
@@ -1301,7 +1315,7 @@ function addCustomCat() {
 }
 
 function getSelectedCats() {
-  return [...document.querySelectorAll('#cat-tags .tag-toggle.selected')].map(el => el.textContent);
+  return [...document.querySelectorAll('#cat-tags .tag-toggle.selected')].map(el => el.dataset.cat);
 }
 
 // Star input
