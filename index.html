@@ -617,6 +617,7 @@ function makeSeedData() {
 }
 
 // ─── State ────────────────────────────────────────────────────────────
+if (!localStorage.getItem(CLIENT_ID_KEY)) localStorage.setItem(CLIENT_ID_KEY, HARDCODED_CLIENT_ID);
 let state = { dramas: [], referrals: [], customCats: [], version: 1 };
 let currentView = 'grid';
 let currentTab = 'dashboard';
