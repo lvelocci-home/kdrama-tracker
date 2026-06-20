@@ -950,8 +950,10 @@ function renderDashboard() {
 
 function dramaMiniCard(d) {
   return `<div class="drama-card" onclick="viewDrama('${d.id}')">
-    ${d.favorite ? '<span class="heart">❤️</span>' : ''}
-    <div class="title">${d.title}</div>
+    <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:6px">
+      <div class="title" style="margin-bottom:0;flex:1">${d.title}</div>
+      ${d.favorite ? '<span style="font-size:14px;flex-shrink:0;margin-top:1px">❤️</span>' : ''}
+    </div>
     <div class="meta">
       <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}" style="font-size:10px;padding:2px 7px">${d.type}</span>
       ${d.rating ? renderStars(d.rating, 12) : ''}
@@ -1042,8 +1044,10 @@ function dramaCard(d) {
     ? `<span style="font-size:11px;color:var(--accent)">Ep ${d.currentEpisode||0}/${d.totalEpisodes}</span>` : '';
   const cats = (d.categories||[]).slice(0,2).map(c => `<span class="tag" style="font-size:10px;padding:2px 7px">${c}</span>`).join('');
   return `<div class="drama-card" onclick="viewDrama('${d.id}')">
-    ${d.favorite ? '<span class="heart">❤️</span>' : ''}
-    <div class="title">${d.title}</div>
+    <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:6px">
+      <div class="title" style="margin-bottom:0;flex:1">${d.title}</div>
+      ${d.favorite ? '<span style="font-size:14px;flex-shrink:0;margin-top:1px">❤️</span>' : ''}
+    </div>
     <div class="meta">
       <span><span class="status-dot ${statusClass(d.status)}"></span><span style="font-size:11px">${d.status}</span></span>
       <span class="tag ${d.type==='Reality'?'type-reality':'type-drama'}" style="font-size:10px;padding:2px 7px">${d.type}</span>
