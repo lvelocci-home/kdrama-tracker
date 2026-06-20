@@ -1,4 +1,4 @@
-# My K-Drama Year 🌸
+# My K-Drama Years 🌸
 
 A warm, personal K-drama journal and tracker. Part watchlist, part diary — a keepsake of the shows that got me through the year.
 
