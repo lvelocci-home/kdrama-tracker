@@ -549,6 +549,7 @@ main { padding: 0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)); min-height
 // ─── Constants ───────────────────────────────────────────────────────
 const STORAGE_KEY = 'kdrama_data_v1';
 const CLIENT_ID_KEY = 'kdrama_gclient_id';
+const HARDCODED_CLIENT_ID = '98424282031-a7epqk7um4nc93t635cc37k3iokcdgfe.apps.googleusercontent.com';
 const FILE_NAME = 'kdrama-tracker-data.json';
 const DRIVE_FILE_KEY = 'kdrama_drive_file_id';
 
@@ -728,6 +729,7 @@ let gapiInited = false;
 
 function loadGapi() {
   if (typeof gapi === 'undefined') return;
+  if (!localStorage.getItem(CLIENT_ID_KEY)) localStorage.setItem(CLIENT_ID_KEY, HARDCODED_CLIENT_ID);
   const clientId = localStorage.getItem(CLIENT_ID_KEY);
   if (!clientId) return;
   gapi.load('client:auth2', async () => {
@@ -1590,13 +1592,11 @@ loadLocal();
 renderDashboard();
 renderDriveStatus();
 
-// Load gapi if configured
-if (localStorage.getItem(CLIENT_ID_KEY)) {
-  const s = document.createElement('script');
-  s.src = 'https://apis.google.com/js/api.js';
-  s.onload = loadGapi;
-  document.head.appendChild(s);
-}
+// Load gapi
+const s = document.createElement('script');
+s.src = 'https://apis.google.com/js/api.js';
+s.onload = loadGapi;
+document.head.appendChild(s);
 
 // Online/offline
 window.addEventListener('online', () => { if (driveReady) saveToDrive(); });
