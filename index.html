@@ -866,6 +866,15 @@ function goTab(tab) {
   window.scrollTo(0, 0);
 }
 
+function goToListFiltered(status) {
+  goTab('list');
+  document.getElementById('filter-status').value = status;
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-cat').value = '';
+  document.getElementById('search').value = '';
+  renderList();
+}
+
 function handleFab() {
   if (currentTab === 'referrals') openModal('add-referral');
   else openModal('add-drama');
@@ -878,9 +887,9 @@ function renderDashboard() {
   const want = state.dramas.filter(d => d.status === 'Want to Watch');
 
   document.getElementById('stats').innerHTML = `
-    <div class="stat-card"><div class="stat-num">${watched.length}</div><div class="stat-label">Watched</div></div>
-    <div class="stat-card"><div class="stat-num">${watching.length}</div><div class="stat-label">Watching</div></div>
-    <div class="stat-card"><div class="stat-num">${want.length}</div><div class="stat-label">Want to Watch</div></div>
+    <div class="stat-card" style="cursor:pointer" onclick="goToListFiltered('Watched')"><div class="stat-num">${watched.length}</div><div class="stat-label">Watched</div></div>
+    <div class="stat-card" style="cursor:pointer" onclick="goToListFiltered('Watching')"><div class="stat-num">${watching.length}</div><div class="stat-label">Watching</div></div>
+    <div class="stat-card" style="cursor:pointer" onclick="goToListFiltered('Want to Watch')"><div class="stat-num">${want.length}</div><div class="stat-label">Want to Watch</div></div>
   `;
 
   // Favorites
