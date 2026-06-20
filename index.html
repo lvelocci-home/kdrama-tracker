@@ -34,11 +34,14 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 16px; line-height: 1.5; overflow-x: hidden; }
 
-/* Nav — always pinned at top */
-nav { position: sticky; top: 0; left: 0; right: 0; background: var(--card); border-bottom: 1px solid var(--border); display: flex; z-index: 100; padding: 0 8px; padding-top: env(safe-area-inset-top); }
-nav button { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5px; padding: 12px 4px; color: var(--text3); font-size: 12px; font-family: var(--font); transition: color 0.15s; white-space: nowrap; }
+/* Nav — always pinned at top, brand on left */
+nav { position: sticky; top: 0; left: 0; right: 0; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; z-index: 100; padding: 0 12px; padding-top: env(safe-area-inset-top); gap: 2px; flex-wrap: wrap; }
+.nav-brand { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); margin-right: 14px; padding: 12px 4px; white-space: nowrap; flex-shrink: 0; }
+.nav-brand span { color: var(--accent); }
+nav button { background: none; border: none; cursor: pointer; display: flex; flex-direction: row; align-items: center; gap: 5px; padding: 12px 10px; color: var(--text3); font-size: 13px; font-weight: 500; font-family: var(--font); transition: color 0.15s; white-space: nowrap; }
 nav button.active { color: var(--accent); }
-nav button svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+nav button svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+nav .save-status { margin-left: auto; }
 
 /* Layout */
 main { padding: 0; min-height: 100vh; }
@@ -187,7 +190,9 @@ main { padding: 0; min-height: 100vh; }
 .drive-banner.ok { background: var(--green-bg); border-color: #b8ddc4; color: var(--green); }
 .drive-banner.warn { background: #fff8e8; border-color: #f0d890; color: #7a5a10; }
 .drive-banner.error { background: #faeaea; border-color: #e8b4b4; color: #8a3a3a; }
-.save-status { font-size: 11px; color: var(--text3); margin-left: auto; }
+.save-status { font-size: 11px; color: var(--text3); margin-left: auto; flex-shrink: 0; }
+.page-title { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 14px; }
+.page-title span { color: var(--accent); }
 
 /* Drag handle for ordering */
 .drag-handle { cursor: grab; color: var(--text3); display: flex; align-items: center; }
@@ -240,6 +245,7 @@ main { padding: 0; min-height: 100vh; }
 <body>
 
 <nav id="nav">
+  <span class="nav-brand">My <span>K-Drama</span> Years 🌸</span>
   <button class="active" data-tab="dashboard" onclick="goTab('dashboard')">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Home
@@ -256,15 +262,12 @@ main { padding: 0; min-height: 100vh; }
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Settings
   </button>
+  <span class="save-status" id="save-status">✓ Saved</span>
 </nav>
 
 <main>
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="page active">
-    <div class="topbar">
-      <h1>My <span>K-Drama</span> Years 🌸</h1>
-      <div class="save-status" id="save-status">✓ Saved</div>
-    </div>
     <div id="drive-banner"></div>
     <div class="stat-grid" id="stats"></div>
     <div class="section-title">❤️ Favorites</div>
@@ -293,8 +296,7 @@ main { padding: 0; min-height: 100vh; }
 
   <!-- MY LIST -->
   <div id="tab-list" class="page">
-    <div class="topbar">
-      <h1>My <span>List</span></h1>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
       <div class="view-toggle">
         <button id="view-grid-btn" class="active" onclick="setView('grid')">Grid</button>
         <button id="view-table-btn" onclick="setView('table')">Table</button>
@@ -331,7 +333,7 @@ main { padding: 0; min-height: 100vh; }
 
   <!-- REFERRALS -->
   <div id="tab-referrals" class="page">
-    <div class="topbar"><h1><span>Referrals</span></h1></div>
+    <h1 class="page-title"><span>Referrals</span></h1>
     <div id="referrals-list"></div>
     <div class="empty" id="referrals-empty" style="display:none">
       <div class="emoji">💌</div>
@@ -341,7 +343,7 @@ main { padding: 0; min-height: 100vh; }
 
   <!-- SETTINGS -->
   <div id="tab-settings" class="page">
-    <div class="topbar"><h1><span>Settings</span></h1></div>
+    <h1 class="page-title"><span>Settings</span></h1>
 
     <div class="card">
       <div class="section-title" style="margin-bottom:10px">☁️ Google Drive Sync</div>
