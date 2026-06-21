@@ -36,8 +36,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* Nav — always pinned at top, brand on left */
 nav { position: sticky; top: 0; left: 0; right: 0; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; z-index: 100; padding: 0 12px; padding-top: env(safe-area-inset-top); gap: 2px; flex-wrap: wrap; }
-.nav-brand { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); margin-right: 14px; padding: 12px 4px; white-space: nowrap; flex-shrink: 0; }
+.nav-brand { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); margin-right: 14px; padding: 12px 4px; white-space: nowrap; flex-shrink: 0; cursor: pointer; border-bottom: 2px solid transparent; transition: border-color 0.15s; }
 .nav-brand span { color: var(--accent); }
+.nav-brand.active { border-bottom-color: var(--accent); }
 nav button { background: none; border: none; cursor: pointer; display: flex; flex-direction: row; align-items: center; gap: 5px; padding: 12px 10px; color: var(--text3); font-size: 13px; font-weight: 500; font-family: var(--font); transition: color 0.15s; white-space: nowrap; }
 nav button.active { color: var(--accent); }
 nav button svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
@@ -115,6 +116,11 @@ main { padding: 0; min-height: 100vh; }
 .btn-fab { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 16px); right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(194,107,107,0.4); display: flex; align-items: center; justify-content: center; z-index: 90; transition: transform 0.15s, background 0.15s; }
 .btn-fab:active { transform: scale(0.92); }
 .btn-fab:hover { background: var(--accent2); }
+.btn-fab.open { transform: rotate(45deg); }
+#fab-menu { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 80px); right: 16px; z-index: 95; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+#fab-menu button { display: flex; align-items: center; gap: 8px; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 24px; padding: 10px 16px; font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; box-shadow: 0 3px 14px rgba(58,46,46,0.16); white-space: nowrap; transition: transform 0.1s; }
+#fab-menu button:active { transform: scale(0.97); }
+#fab-menu button svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: flex-end; }
@@ -245,11 +251,7 @@ main { padding: 0; min-height: 100vh; }
 <body>
 
 <nav id="nav">
-  <span class="nav-brand">My <span>K-Drama</span> Years 🌸</span>
-  <button class="active" data-tab="dashboard" onclick="goTab('dashboard')">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Home
-  </button>
+  <span class="nav-brand active" role="button" tabindex="0" onclick="goTab('dashboard')">My <span>K-Drama</span> Years 🌸</span>
   <button data-tab="list" onclick="goTab('list')">
     <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     My List
@@ -278,20 +280,6 @@ main { padding: 0; min-height: 100vh; }
     <div id="dash-recent"></div>
     <div class="section-title" style="margin-top:18px">🏷️ Top Categories</div>
     <div id="dash-cats"></div>
-    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="btn" onclick="openModal('add-drama')">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        Add Drama
-      </button>
-      <button class="btn secondary" onclick="openModal('add-referral')">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        Add Referral
-      </button>
-      <button class="btn secondary" onclick="generateSharePage()">
-        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-        Share My List
-      </button>
-    </div>
   </div>
 
   <!-- MY LIST -->
@@ -367,6 +355,14 @@ main { padding: 0; min-height: 100vh; }
       <div id="import-preview-wrap"></div>
     </div>
 
+    <div class="card" style="margin-top:12px">
+      <div class="section-title" style="margin-bottom:10px">📤 Share My List</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Download a read-only page of your watched list to send to friends — no login needed for them to view it.</p>
+      <button class="btn small" onclick="generateSharePage()">
+        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+        Share My List
+      </button>
+    </div>
 
     <div class="card" style="margin-top:12px">
       <div class="section-title" style="margin-bottom:10px">🗑️ Danger Zone</div>
@@ -376,7 +372,11 @@ main { padding: 0; min-height: 100vh; }
 </main>
 
 <!-- FAB -->
-<button class="btn-fab" id="fab" onclick="handleFab()" title="Add">+</button>
+<div id="fab-menu" style="display:none">
+  <button onclick="fabPick('add-drama')"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Add Drama</button>
+  <button onclick="fabPick('add-referral')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Add Referral</button>
+</div>
+<button class="btn-fab" id="fab" onclick="handleFab(event)" title="Add">+</button>
 
 <!-- ADD/EDIT DRAMA MODAL -->
 <div id="modal-drama" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'modal-drama')">
@@ -858,7 +858,9 @@ function goTab(tab) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  document.querySelector(`nav button[data-tab="${tab}"]`).classList.add('active');
+  const navBtn = document.querySelector(`nav button[data-tab="${tab}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  document.querySelector('.nav-brand').classList.toggle('active', tab === 'dashboard');
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'list') renderList();
   if (tab === 'referrals') renderReferrals();
@@ -875,9 +877,23 @@ function goToListFiltered(status) {
   renderList();
 }
 
-function handleFab() {
-  if (currentTab === 'referrals') openModal('add-referral');
-  else openModal('add-drama');
+function handleFab(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('fab-menu');
+  const fab = document.getElementById('fab');
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'flex';
+  fab.classList.toggle('open', !isOpen);
+}
+
+function closeFabMenu() {
+  document.getElementById('fab-menu').style.display = 'none';
+  document.getElementById('fab').classList.remove('open');
+}
+
+function fabPick(type) {
+  closeFabMenu();
+  openModal(type);
 }
 
 // ─── Dashboard ───────────────────────────────────────────────────────
@@ -1330,9 +1346,9 @@ function setStarInputValue(v) {
 
 document.addEventListener('click', e => {
   const s = e.target.closest('#star-input span');
-  if (!s) return;
-  const v = parseInt(s.dataset.v);
-  setStarInputValue(v);
+  if (s) { setStarInputValue(parseInt(s.dataset.v)); return; }
+  // Close FAB menu when clicking outside it (and not on the FAB itself)
+  if (!e.target.closest('#fab-menu') && !e.target.closest('#fab')) closeFabMenu();
 });
 
 function saveDrama() {
@@ -1582,9 +1598,12 @@ function handleOverlayClick(e, id) {
 
 // Escape key
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') ['modal-drama','modal-view','modal-referral'].forEach(id => {
-    if (document.getElementById(id).style.display !== 'none') closeModal(id);
-  });
+  if (e.key === 'Escape') {
+    closeFabMenu();
+    ['modal-drama','modal-view','modal-referral'].forEach(id => {
+      if (document.getElementById(id).style.display !== 'none') closeModal(id);
+    });
+  }
 });
 
 // ─── Danger ───────────────────────────────────────────────────────────
