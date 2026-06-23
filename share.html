@@ -158,12 +158,12 @@ function render() {
       <button class="${currentFilter==='want'?'on':''}" onclick="setFilter('want')">Want to Watch (${want.length})</button>
       <button class="${currentFilter==='favorites'?'on':''}" onclick="setFilter('favorites')">❤️ Favorites</button>
     </div>
+    ${recformHtml()}
+    ${recentRecsHtml()}
     ${visible.length === 0 ? '<div class="empty-state"><div class="emoji">📺</div>Nothing here yet.</div>' : `
       <div class="grid">
         ${visible.map(cardHtml).join('')}
       </div>`}
-    ${recformHtml()}
-    ${recentRecsHtml()}
     <div class="foot">A read-only share from <a href="https://lvelocci-home.github.io/kdrama-tracker/">My K-Drama Years</a></div>
   `;
 }
