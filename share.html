@@ -48,6 +48,25 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 .empty-state .emoji { font-size: 40px; margin-bottom: 10px; }
 .foot { text-align: center; color: var(--text3); font-size: 12px; margin-top: 20px; padding: 0 20px; }
 .foot a { color: var(--accent); text-decoration: none; }
+.recform { max-width: 600px; margin: 28px auto 0; padding: 0 20px; }
+.recform h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.recform .hint { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+.rcard { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.rfield { margin-bottom: 10px; }
+.rfield label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.rfield input, .rfield textarea { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 14px; font-family: var(--font); color: var(--text); outline: none; transition: border-color 0.15s; }
+.rfield input:focus, .rfield textarea:focus { border-color: var(--accent2); }
+.rfield textarea { min-height: 60px; resize: vertical; line-height: 1.4; }
+.rsubmit { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s; }
+.rsubmit:hover { background: var(--accent2); }
+.rsubmit:disabled { opacity: 0.5; cursor: wait; }
+.rthanks { background: var(--green-bg); color: var(--green); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-top: 10px; }
+.recent-recs { max-width: 600px; margin: 16px auto 0; padding: 0 20px; }
+.recent-recs h3 { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.rrow { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; font-size: 13px; }
+.rrow b { font-weight: 700; }
+.rrow .who { color: var(--accent); font-size: 12px; }
+.rrow .why { color: var(--text2); margin-top: 4px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -143,11 +162,72 @@ function render() {
       <div class="grid">
         ${visible.map(cardHtml).join('')}
       </div>`}
+    ${recformHtml()}
+    ${recentRecsHtml()}
     <div class="foot">A read-only share from <a href="https://lvelocci-home.github.io/kdrama-tracker/">My K-Drama Years</a></div>
   `;
 }
 
 function setFilter(f) { currentFilter = f; render(); }
+
+function recformHtml() {
+  return `<div class="recform">
+    <h2>📥 Recommend a drama</h2>
+    <div class="hint">Send me something you think I'd love. I'll see it next time I open the app.</div>
+    <div class="rcard">
+      <form onsubmit="submitRec(event)">
+        <div class="rfield"><label>Drama title *</label><input id="r-title" maxlength="200" required></div>
+        <div class="rfield"><label>Your name *</label><input id="r-by" maxlength="80" required></div>
+        <div class="rfield"><label>Why you recommend it (optional)</label><textarea id="r-notes" maxlength="1000" placeholder="Funny / heart-wrenching / great chemistry…"></textarea></div>
+        <div class="rfield"><label>Where to watch (optional)</label><input id="r-service" maxlength="60" placeholder="Netflix, Viki, etc."></div>
+        <button type="submit" class="rsubmit" id="r-submit">Send recommendation</button>
+        <div id="r-thanks"></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+function recentRecsHtml() {
+  const refs = (DATA && DATA.referrals) || [];
+  if (!refs.length) return '';
+  return `<div class="recent-recs">
+    <h3>Recent recommendations</h3>
+    ${refs.slice(0, 8).map(r => `<div class="rrow">
+      <b>${esc(r.title)}</b> <span class="who">— ${esc(r.recommendedBy)}</span>
+      ${r.notes ? `<div class="why">${esc(r.notes)}</div>` : ''}
+    </div>`).join('')}
+  </div>`;
+}
+
+async function submitRec(ev) {
+  ev.preventDefault();
+  const title = document.getElementById('r-title').value.trim();
+  const recommendedBy = document.getElementById('r-by').value.trim();
+  const notes = document.getElementById('r-notes').value.trim();
+  const service = document.getElementById('r-service').value.trim();
+  if (!title || !recommendedBy) return;
+  const btn = document.getElementById('r-submit');
+  const thanks = document.getElementById('r-thanks');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await fetch(API.replace(/\/$/,'') + '/api/share/' + encodeURIComponent(token) + '/referrals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, recommendedBy, notes, service })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    thanks.innerHTML = '<div class="rthanks">Thanks! Recommendation sent. 🌸</div>';
+    document.getElementById('r-title').value = '';
+    document.getElementById('r-notes').value = '';
+    document.getElementById('r-service').value = '';
+    // Re-pull to show the new rec in the recent list
+    setTimeout(load, 800);
+  } catch (e) {
+    thanks.innerHTML = '<div class="rthanks" style="background:#faeaea;color:#8a3a3a">Could not send. Try again in a moment.</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send recommendation';
+  }
+}
 
 function cardHtml(d) {
   const cats = (d.categories||[]).slice(0,4).map(c => `<span class="tag cat">${esc(c)}</span>`).join('');
