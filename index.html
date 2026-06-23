@@ -192,6 +192,12 @@ main { padding: 0; min-height: 100vh; }
 .import-check { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
 
 /* Drive status */
+.reveal-wrap { position: relative; }
+.reveal-wrap input { padding-right: 42px; }
+.reveal-btn { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 6px; display: flex; align-items: center; color: var(--text3); border-radius: 6px; transition: color 0.15s, background 0.15s; }
+.reveal-btn:hover { color: var(--accent); background: var(--accent-bg); }
+.reveal-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.reveal-btn[data-shown="true"] { color: var(--accent); }
 .drive-banner { background: var(--blue-bg); border: 1px solid #b8d8ed; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .drive-banner.ok { background: var(--green-bg); border-color: #b8ddc4; color: var(--green); }
 .drive-banner.warn { background: #fff8e8; border-color: #f0d890; color: #7a5a10; }
@@ -338,11 +344,21 @@ main { padding: 0; min-height: 100vh; }
       <div id="cloud-status"></div>
       <div class="form-group" style="margin-top:10px">
         <label>API URL</label>
-        <input type="url" id="cl-url" placeholder="https://kdrama-tracker-api.onrender.com" autocomplete="off">
+        <div class="reveal-wrap">
+          <input type="password" id="cl-url" placeholder="https://kdrama-tracker-api.onrender.com" autocomplete="off">
+          <button type="button" class="reveal-btn" onclick="toggleReveal('cl-url', this)" aria-label="Show/hide" data-shown="false">
+            <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <div class="form-group">
         <label>Private sync token</label>
-        <input type="text" id="cl-token" placeholder="A long random string — use the same on every device" autocomplete="off">
+        <div class="reveal-wrap">
+          <input type="password" id="cl-token" placeholder="A long random string — use the same on every device" autocomplete="off">
+          <button type="button" class="reveal-btn" onclick="toggleReveal('cl-token', this)" aria-label="Show/hide" data-shown="false">
+            <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn small" onclick="saveCloud()">Sync now</button>
@@ -707,6 +723,17 @@ let gapiInited = false;
 
 // ─── Cloud Sync (Render + Supabase) ──────────────────────────────────
 function saveCloudConfig() { localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud)); }
+
+function toggleReveal(inputId, btn) {
+  const el = document.getElementById(inputId);
+  const shown = el.type === 'text';
+  el.type = shown ? 'password' : 'text';
+  btn.dataset.shown = String(!shown);
+  // Swap eye icon: open ↔ slashed
+  btn.innerHTML = shown
+    ? '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-10-7-10-7a17.4 17.4 0 0 1 4.06-5.06"/><path d="M9.9 5.08A10.6 10.6 0 0 1 12 5c7 0 10 7 10 7a17.4 17.4 0 0 1-2.06 3.14"/><path d="M9.9 9.9a3 3 0 1 0 4.2 4.2"/><path d="M2 2l20 20"/></svg>';
+}
 
 function scheduleCloudPush() {
   if (!cloud.url || !cloud.token) return;
