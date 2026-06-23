@@ -47,6 +47,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 .empty-state .emoji { font-size: 40px; margin-bottom: 10px; }
 .foot { text-align: center; color: var(--text3); font-size: 12px; margin-top: 20px; padding: 0 20px; }
 .foot a { color: var(--accent); text-decoration: none; }
+#scroll-rec { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 18px); right: 16px; background: var(--accent); color: white; border: none; border-radius: 24px; padding: 11px 18px; font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; box-shadow: 0 4px 20px rgba(194,107,107,0.4); display: flex; align-items: center; gap: 6px; z-index: 90; transition: transform 0.1s, background 0.15s; }
+#scroll-rec:hover { background: var(--accent2); }
+#scroll-rec:active { transform: scale(0.96); }
 .recform { max-width: 600px; margin: 28px auto 0; padding: 0 20px; }
 .recform h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .recform .hint { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
@@ -78,6 +81,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 </head>
 <body>
 <div id="root"><div class="empty-state"><div class="emoji">🌸</div>Loading…</div></div>
+<button id="scroll-rec" onclick="scrollToRecommend()" style="display:none" aria-label="Recommend a drama">
+  <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Recommend
+</button>
 <script>
 const params = new URLSearchParams(location.search);
 const token = params.get('t') || location.hash.replace(/^#/,'') || '';
@@ -171,8 +178,8 @@ function render() {
     </div>
     ${recformHtml()}
     ${recentRecsHtml()}
-    ${visible.length === 0 ? '<div class="empty-state"><div class="emoji">📺</div>Nothing here yet.</div>' : `
-      <div class="grid">
+    ${visible.length === 0 ? '<div class="empty-state" id="list-anchor"><div class="emoji">📺</div>Nothing here yet.</div>' : `
+      <div class="grid" id="list-anchor">
         ${visible.map(cardHtml).join('')}
       </div>`}
     <div class="foot">A read-only share from <a href="https://lvelocci-home.github.io/kdrama-tracker/">My K-Drama Years</a></div>
@@ -180,7 +187,25 @@ function render() {
   seedRecForm();
 }
 
-function setFilter(f) { currentFilter = f; render(); }
+function setFilter(f) {
+  currentFilter = f;
+  render();
+  setTimeout(() => {
+    const el = document.getElementById('list-anchor');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function scrollToRecommend() {
+  const el = document.querySelector('.recform');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scroll-rec');
+  if (!btn) return;
+  btn.style.display = window.scrollY > 600 ? 'flex' : 'none';
+}, { passive: true });
 
 function recformHtml() {
   return `<div class="recform">
