@@ -23,14 +23,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 .header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
 .header h1 span { color: var(--accent); }
 .header .sub { color: var(--text2); font-size: 14px; margin-top: 8px; }
-.stats { display: flex; justify-content: center; gap: 12px; margin: 16px 20px 0; flex-wrap: wrap; }
-.stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; min-width: 92px; text-align: center; }
+.stats { display: flex; justify-content: center; gap: 10px; margin: 16px 20px 0; flex-wrap: wrap; }
+.stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; min-width: 88px; text-align: center; cursor: pointer; transition: all 0.15s; user-select: none; }
+.stat:hover { border-color: var(--accent2); }
+.stat.on { background: var(--accent); border-color: var(--accent); }
+.stat.on b, .stat.on .lbl { color: white; }
 .stat b { display: block; font-size: 22px; font-weight: 800; color: var(--accent); line-height: 1; }
 .stat .lbl { font-size: 11px; color: var(--text2); margin-top: 3px; }
-.filters { max-width: 960px; margin: 20px auto 0; padding: 0 20px; display: flex; gap: 6px; flex-wrap: wrap; }
-.filters button { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--text2); font-family: var(--font); transition: all 0.15s; }
-.filters button:hover { border-color: var(--accent2); color: var(--accent); }
-.filters button.on { background: var(--accent); color: white; border-color: var(--accent); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; padding: 16px 20px; max-width: 960px; margin: 0 auto; }
 @media (max-width: 480px) { .grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; } }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 12px; break-inside: avoid; position: relative; }
@@ -57,6 +56,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 .rfield input, .rfield textarea { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 14px; font-family: var(--font); color: var(--text); outline: none; transition: border-color 0.15s; }
 .rfield input:focus, .rfield textarea:focus { border-color: var(--accent2); }
 .rfield textarea { min-height: 60px; resize: vertical; line-height: 1.4; }
+.r-row { border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 12px; }
+.r-row:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+.r-row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.r-row-num { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; }
+.r-remove { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 8px; border-radius: 6px; display: none; }
+.r-remove:hover { background: var(--accent-bg); color: var(--accent); }
+.r-addmore { background: none; border: 1.5px dashed var(--border2); color: var(--text2); border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); width: 100%; margin: 12px 0 10px; transition: all 0.15s; }
+.r-addmore:hover { border-color: var(--accent); color: var(--accent); }
 .rsubmit { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s; }
 .rsubmit:hover { background: var(--accent2); }
 .rsubmit:disabled { opacity: 0.5; cursor: wait; }
@@ -126,6 +133,13 @@ function renderError(msg) {
     <div class="empty-state"><div class="emoji">😔</div><p>${esc(msg)}</p></div>`;
 }
 
+function seedRecForm() {
+  // Called after render() to ensure a fresh first row appears
+  recRowSeq = 0;
+  const wrap = document.getElementById('r-rows');
+  if (wrap && wrap.children.length === 0) addRecRow();
+}
+
 function render() {
   const dramas = DATA.dramas || [];
   const watched = dramas.filter(d => d.status === 'Watched');
@@ -142,21 +156,18 @@ function render() {
 
   const updated = DATA.updated_at ? new Date(DATA.updated_at).toLocaleDateString() : '';
 
+  const favCount = dramas.filter(d => d.favorite).length;
+
   document.getElementById('root').innerHTML = `
     <div class="header">
       <h1>My <span>K-Drama</span> Years 🌸</h1>
       <div class="sub">${updated ? 'Last updated ' + updated : ''}</div>
       <div class="stats">
-        <div class="stat"><b>${watched.length}</b><div class="lbl">Watched</div></div>
-        <div class="stat"><b>${watching.length}</b><div class="lbl">Watching</div></div>
-        <div class="stat"><b>${want.length}</b><div class="lbl">Want to Watch</div></div>
+        <div class="stat ${currentFilter==='all'?'on':''}" onclick="setFilter('all')"><b>${watched.length}</b><div class="lbl">Watched</div></div>
+        <div class="stat ${currentFilter==='watching'?'on':''}" onclick="setFilter('watching')"><b>${watching.length}</b><div class="lbl">Watching</div></div>
+        <div class="stat ${currentFilter==='want'?'on':''}" onclick="setFilter('want')"><b>${want.length}</b><div class="lbl">Want to Watch</div></div>
+        <div class="stat ${currentFilter==='favorites'?'on':''}" onclick="setFilter('favorites')"><b>${favCount}</b><div class="lbl">❤️ Favorites</div></div>
       </div>
-    </div>
-    <div class="filters">
-      <button class="${currentFilter==='all'?'on':''}" onclick="setFilter('all')">Watched (${watched.length})</button>
-      <button class="${currentFilter==='watching'?'on':''}" onclick="setFilter('watching')">Watching (${watching.length})</button>
-      <button class="${currentFilter==='want'?'on':''}" onclick="setFilter('want')">Want to Watch (${want.length})</button>
-      <button class="${currentFilter==='favorites'?'on':''}" onclick="setFilter('favorites')">❤️ Favorites</button>
     </div>
     ${recformHtml()}
     ${recentRecsHtml()}
@@ -166,6 +177,7 @@ function render() {
       </div>`}
     <div class="foot">A read-only share from <a href="https://lvelocci-home.github.io/kdrama-tracker/">My K-Drama Years</a></div>
   `;
+  seedRecForm();
 }
 
 function setFilter(f) { currentFilter = f; render(); }
@@ -173,18 +185,56 @@ function setFilter(f) { currentFilter = f; render(); }
 function recformHtml() {
   return `<div class="recform">
     <h2>📥 Recommend a drama</h2>
-    <div class="hint">Send me something you think I'd love. I'll see it next time I open the app.</div>
+    <div class="hint">Send me something you think I'd love. Add as many as you want — I'll see them next time I open the app.</div>
     <div class="rcard">
       <form onsubmit="submitRec(event)">
-        <div class="rfield"><label>Drama title *</label><input id="r-title" maxlength="200" required></div>
         <div class="rfield"><label>Your name *</label><input id="r-by" maxlength="80" required></div>
-        <div class="rfield"><label>Why you recommend it (optional)</label><textarea id="r-notes" maxlength="1000" placeholder="Funny / heart-wrenching / great chemistry…"></textarea></div>
-        <div class="rfield"><label>Where to watch (optional)</label><input id="r-service" maxlength="60" placeholder="Netflix, Viki, etc."></div>
-        <button type="submit" class="rsubmit" id="r-submit">Send recommendation</button>
+        <div id="r-rows"></div>
+        <button type="button" class="r-addmore" onclick="addRecRow()">+ Add another drama</button>
+        <button type="submit" class="rsubmit" id="r-submit">Send recommendation${''}</button>
         <div id="r-thanks"></div>
       </form>
     </div>
   </div>`;
+}
+
+let recRowSeq = 0;
+function addRecRow() {
+  recRowSeq++;
+  const idx = recRowSeq;
+  const wrap = document.getElementById('r-rows');
+  const div = document.createElement('div');
+  div.className = 'r-row';
+  div.dataset.idx = idx;
+  div.innerHTML = `
+    <div class="r-row-head">
+      <span class="r-row-num">Drama ${wrap.children.length + 1}</span>
+      <button type="button" class="r-remove" onclick="removeRecRow(${idx})" aria-label="Remove">×</button>
+    </div>
+    <div class="rfield"><label>Title *</label><input class="r-title-in" maxlength="200" required></div>
+    <div class="rfield"><label>Why (optional)</label><textarea class="r-notes-in" maxlength="1000" placeholder="Funny / heart-wrenching / great chemistry…"></textarea></div>
+    <div class="rfield"><label>Where to watch (optional)</label><input class="r-service-in" maxlength="60" placeholder="Netflix, Viki, etc."></div>
+  `;
+  wrap.appendChild(div);
+  refreshRecRowNums();
+  div.querySelector('.r-title-in').focus();
+}
+
+function removeRecRow(idx) {
+  const row = document.querySelector(`.r-row[data-idx="${idx}"]`);
+  if (!row) return;
+  if (document.querySelectorAll('.r-row').length <= 1) return; // never remove the last
+  row.remove();
+  refreshRecRowNums();
+}
+
+function refreshRecRowNums() {
+  document.querySelectorAll('.r-row').forEach((row, i) => {
+    const head = row.querySelector('.r-row-num');
+    if (head) head.textContent = 'Drama ' + (i + 1);
+    const rm = row.querySelector('.r-remove');
+    if (rm) rm.style.display = document.querySelectorAll('.r-row').length > 1 ? 'inline-block' : 'none';
+  });
 }
 
 function recentRecsHtml() {
@@ -201,26 +251,32 @@ function recentRecsHtml() {
 
 async function submitRec(ev) {
   ev.preventDefault();
-  const title = document.getElementById('r-title').value.trim();
   const recommendedBy = document.getElementById('r-by').value.trim();
-  const notes = document.getElementById('r-notes').value.trim();
-  const service = document.getElementById('r-service').value.trim();
-  if (!title || !recommendedBy) return;
+  const rows = [...document.querySelectorAll('.r-row')].map(r => ({
+    title: r.querySelector('.r-title-in').value.trim(),
+    notes: r.querySelector('.r-notes-in').value.trim(),
+    service: r.querySelector('.r-service-in').value.trim(),
+  })).filter(r => r.title);
+  if (!recommendedBy || rows.length === 0) return;
   const btn = document.getElementById('r-submit');
   const thanks = document.getElementById('r-thanks');
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
-    const r = await fetch(API.replace(/\/$/,'') + '/api/share/' + encodeURIComponent(token) + '/referrals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, recommendedBy, notes, service })
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    thanks.innerHTML = '<div class="rthanks">Thanks! Recommendation sent. 🌸</div>';
-    document.getElementById('r-title').value = '';
-    document.getElementById('r-notes').value = '';
-    document.getElementById('r-service').value = '';
-    // Re-pull to show the new rec in the recent list
+    let failed = 0;
+    for (const row of rows) {
+      const r = await fetch(API.replace(/\/$/,'') + '/api/share/' + encodeURIComponent(token) + '/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: row.title, recommendedBy, notes: row.notes, service: row.service })
+      });
+      if (!r.ok) failed++;
+    }
+    if (failed === rows.length) throw new Error('all failed');
+    const ok = rows.length - failed;
+    thanks.innerHTML = `<div class="rthanks">Thanks! Sent ${ok} ${ok === 1 ? 'recommendation' : 'recommendations'}. 🌸</div>`;
+    // Reset rows
+    document.getElementById('r-rows').innerHTML = '';
+    addRecRow();
     setTimeout(load, 800);
   } catch (e) {
     thanks.innerHTML = '<div class="rthanks" style="background:#faeaea;color:#8a3a3a">Could not send. Try again in a moment.</div>';
