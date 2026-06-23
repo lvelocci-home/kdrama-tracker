@@ -1,6 +1,6 @@
 # My K-Drama Years 🌸
 
-A personal K-drama journal and tracker. Part watchlist, part diary — a keepsake of the shows that got me through the year I was diagnosed with breast cancer and beyond.
+A personal K-drama journal and tracker. Part watchlist, part diary.
 
 **Live app:** https://lvelocci-home.github.io/kdrama-tracker/
 
