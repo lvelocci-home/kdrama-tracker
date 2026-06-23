@@ -270,7 +270,7 @@ main { padding: 0; min-height: 100vh; }
 <main>
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="page active">
-    <div id="drive-banner"></div>
+    <div id="cloud-banner"></div>
     <div class="stat-grid" id="stats"></div>
     <div class="section-title">❤️ Favorites</div>
     <div id="dash-favorites"></div>
@@ -334,13 +334,21 @@ main { padding: 0; min-height: 100vh; }
     <h1 class="page-title"><span>Settings</span></h1>
 
     <div class="card">
-      <div class="section-title" style="margin-bottom:10px">☁️ Google Drive Sync</div>
-      <div id="drive-status-settings"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-        <button class="btn small" id="btn-connect-drive" onclick="connectDrive()" style="display:none">Connect Drive</button>
-        <button class="btn small secondary" id="btn-disconnect-drive" onclick="disconnectDrive()" style="display:none">Disconnect</button>
-        <button class="btn small secondary" onclick="forceSave()">Force Save</button>
+      <div class="section-title" style="margin-bottom:10px">☁️ Cloud Sync</div>
+      <div id="cloud-status"></div>
+      <div class="form-group" style="margin-top:10px">
+        <label>API URL</label>
+        <input type="url" id="cl-url" placeholder="https://kdrama-tracker-api.onrender.com" autocomplete="off">
       </div>
+      <div class="form-group">
+        <label>Private sync token</label>
+        <input type="text" id="cl-token" placeholder="A long random string — use the same on every device" autocomplete="off">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn small" onclick="saveCloud()">Sync now</button>
+        <button class="btn small secondary" onclick="disconnectCloud()" id="btn-disconnect-cloud" style="display:none">Disconnect</button>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:10px">Your data stays in your own Supabase + Render deployment. See <code>server/README.md</code> for setup.</p>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -357,11 +365,13 @@ main { padding: 0; min-height: 100vh; }
 
     <div class="card" style="margin-top:12px">
       <div class="section-title" style="margin-bottom:10px">📤 Share My List</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Download a read-only page of your watched list to send to friends — no login needed for them to view it.</p>
-      <button class="btn small" onclick="generateSharePage()">
-        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-        Share My List
-      </button>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">A live read-only link to your watched dramas, ratings, and categories — always up to date. No journal entries are shared.</p>
+      <div id="share-status"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn small" id="btn-create-share" onclick="createShare()">Create live link</button>
+        <button class="btn small secondary" id="btn-copy-share" onclick="copyShareLink()" style="display:none">Copy link</button>
+        <button class="btn small danger" id="btn-stop-share" onclick="stopShare()" style="display:none">Stop sharing</button>
+      </div>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -522,10 +532,8 @@ main { padding: 0; min-height: 100vh; }
 <script>
 // ─── Constants ───────────────────────────────────────────────────────
 const STORAGE_KEY = 'kdrama_data_v1';
-const CLIENT_ID_KEY = 'kdrama_gclient_id';
-const HARDCODED_CLIENT_ID = '98424282031-a7epqk7um4nc93t635cc37k3iokcdgfe.apps.googleusercontent.com';
-const FILE_NAME = 'kdrama-tracker-data.json';
-const DRIVE_FILE_KEY = 'kdrama_drive_file_id';
+const CLOUD_KEY = 'kdrama_cloud_v1';
+const SHARE_TOKEN_KEY = 'kdrama_share_token';
 
 const DEFAULT_CATS = ['Romance','Comedy','Thriller','Revenge','Zombie/Horror','Fantasy','Slice of life','Historical','Tearjerker','Medical','Legal','Workplace','Family','Friendship'];
 
@@ -591,15 +599,14 @@ function makeSeedData() {
 }
 
 // ─── State ────────────────────────────────────────────────────────────
-if (!localStorage.getItem(CLIENT_ID_KEY)) localStorage.setItem(CLIENT_ID_KEY, HARDCODED_CLIENT_ID);
 let state = { dramas: [], referrals: [], customCats: [], version: 1 };
 let currentView = 'grid';
 let currentTab = 'dashboard';
 let currentViewId = null;
 let saveTimer = null;
-let driveReady = false;
-let driveFileId = localStorage.getItem(DRIVE_FILE_KEY) || null;
-let pendingSave = false;
+let cloudPushTimer = null;
+let cloud = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null') || { url: '', token: '', lastSync: 0 };
+let shareToken = localStorage.getItem(SHARE_TOKEN_KEY) || '';
 
 // ─── Utilities ────────────────────────────────────────────────────────
 function uuid() {
@@ -680,7 +687,7 @@ function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saveLocal();
-    if (driveReady) saveToDrive();
+    if (cloud.url && cloud.token) scheduleCloudPush();
     else setSaveStatus('saved');
   }, 600);
 }
@@ -690,166 +697,159 @@ function setSaveStatus(s) {
   if (!el) return;
   if (s === 'saving') el.textContent = '⏳ Saving…';
   else if (s === 'saved') el.textContent = '✓ Saved';
-  else if (s === 'error') el.textContent = '⚠️ Save failed';
-}
-
-function forceSave() {
-  saveLocal();
-  if (driveReady) saveToDrive();
-  else { toast('Saved locally'); setSaveStatus('saved'); }
+  else if (s === 'syncing') el.textContent = '☁️ Syncing…';
+  else if (s === 'synced') el.textContent = '☁️ Synced';
+  else if (s === 'error') el.textContent = '⚠️ Sync failed';
 }
 
 // ─── Google Drive ─────────────────────────────────────────────────────
 let gapiInited = false;
 
-let tokenClient = null;
-let gsiInited = false;
+// ─── Cloud Sync (Render + Supabase) ──────────────────────────────────
+function saveCloudConfig() { localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud)); }
 
-function loadGapi() {
-  if (typeof gapi === 'undefined') return;
-  gapi.load('client', async () => {
-    try {
-      await gapi.client.init({});
-      await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
-      gapiInited = true;
-      renderDriveStatus();
-    } catch(e) { console.error('gapi init error', e); renderDriveStatus(); }
-  });
+function scheduleCloudPush() {
+  if (!cloud.url || !cloud.token) return;
+  clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(cloudPush, 1200);
 }
 
-function loadGsi() {
-  if (typeof google === 'undefined') return;
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: HARDCODED_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.appdata',
-    callback: (response) => {
-      if (response.error) { toast('Sign-in failed'); return; }
-      driveReady = true;
-      localStorage.setItem('kdrama_drive_authed', '1');
-      renderDriveStatus();
-      loadFromDrive();
-      toast('Connected to Google Drive ☁️');
-    }
-  });
-  gsiInited = true;
-  if (localStorage.getItem('kdrama_drive_authed')) {
-    tokenClient.requestAccessToken({ prompt: '' });
-  }
-  renderDriveStatus();
-}
-
-function connectDrive() {
-  if (!gsiInited) { toast('Still loading — try again in a moment'); return; }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-}
-
-function disconnectDrive() {
-  google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, () => {});
-  gapi.client.setToken(null);
-  driveReady = false;
-  driveFileId = null;
-  localStorage.removeItem(DRIVE_FILE_KEY);
-  localStorage.removeItem('kdrama_drive_authed');
-  renderDriveStatus();
-  toast('Disconnected from Drive');
-}
-
-async function saveToDrive() {
-  if (!driveReady) return;
-  const content = JSON.stringify(state, null, 2);
+async function cloudPush() {
+  if (!cloud.url || !cloud.token) return;
+  setSaveStatus('syncing');
   try {
-    if (driveFileId) {
-      await gapi.client.request({
-        path: `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}`,
-        method: 'PATCH',
-        params: { uploadType: 'media' },
-        headers: { 'Content-Type': 'application/json' },
-        body: content
-      });
-    } else {
-      const meta = await gapi.client.drive.files.create({
-        resource: { name: FILE_NAME, parents: ['appDataFolder'] },
-        fields: 'id'
-      });
-      driveFileId = meta.result.id;
-      localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
-      await gapi.client.request({
-        path: `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}`,
-        method: 'PATCH',
-        params: { uploadType: 'media' },
-        headers: { 'Content-Type': 'application/json' },
-        body: content
-      });
-    }
-    setSaveStatus('saved');
+    const r = await fetch(cloud.url.replace(/\/$/,'') + '/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cloud.token },
+      body: JSON.stringify({ state })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    cloud.lastSync = Date.now();
+    saveCloudConfig();
+    setSaveStatus('synced');
   } catch(e) {
     setSaveStatus('error');
-    toast('Drive save failed — saved locally');
   }
 }
 
-async function loadFromDrive() {
-  if (!driveReady) return;
+async function cloudPull() {
+  if (!cloud.url || !cloud.token) return false;
   try {
-    let fileId = driveFileId;
-    if (!fileId) {
-      const r = await gapi.client.drive.files.list({
-        spaces: 'appDataFolder',
-        fields: 'files(id,name)',
-        q: `name='${FILE_NAME}'`
-      });
-      if (r.result.files.length > 0) {
-        fileId = r.result.files[0].id;
-        driveFileId = fileId;
-        localStorage.setItem(DRIVE_FILE_KEY, fileId);
-      }
+    const r = await fetch(cloud.url.replace(/\/$/,'') + '/api/state', {
+      headers: { 'Authorization': 'Bearer ' + cloud.token }
+    });
+    if (!r.ok) return false;
+    const j = await r.json();
+    if (j && j.state && j.state.dramas) {
+      state = j.state;
+      if (!state.customCats) state.customCats = [];
+      saveLocal();
+      cloud.lastSync = Date.now();
+      saveCloudConfig();
+      return true;
     }
-    if (fileId) {
-      const r = await gapi.client.request({
-        path: `https://www.googleapis.com/drive/v3/files/${fileId}`,
-        params: { alt: 'media' }
-      });
-      const remote = typeof r.result === 'string' ? JSON.parse(r.result) : r.result;
-      if (remote && remote.dramas) {
-        state = remote;
-        if (!state.customCats) state.customCats = [];
-        saveLocal();
-        renderAll();
-        toast('Loaded from Google Drive ☁️');
-      }
-    }
-  } catch(e) { /* use local */ }
+  } catch(e) {}
+  return false;
 }
 
-function renderDriveStatus() {
-  const el = document.getElementById('drive-status-settings');
+async function saveCloud() {
+  const url = document.getElementById('cl-url').value.trim();
+  const token = document.getElementById('cl-token').value.trim();
+  if (!url || !token) { toast('Enter both URL and token'); return; }
+  if (token.length < 12) { toast('Pick a longer token (12+ characters)'); return; }
+  cloud.url = url; cloud.token = token; saveCloudConfig();
+  setSaveStatus('syncing'); toast('Syncing… (server may take 30s to wake)');
+  const got = await cloudPull();
+  if (got) { renderAll(); toast('Pulled cloud data ✓'); }
+  else { await cloudPush(); toast('Pushed local data ✓'); }
+  renderCloudStatus();
+}
+
+function disconnectCloud() {
+  if (!confirm('Disconnect cloud sync? Your data stays on this device.')) return;
+  cloud = { url: '', token: '', lastSync: 0 };
+  saveCloudConfig();
+  renderCloudStatus();
+  toast('Disconnected from cloud');
+}
+
+function renderCloudStatus() {
+  const el = document.getElementById('cloud-status');
   if (!el) return;
-  const connectBtn = document.getElementById('btn-connect-drive');
-  const disconnectBtn = document.getElementById('btn-disconnect-drive');
-  if (!gsiInited) {
-    el.innerHTML = '<div class="drive-banner warn">⏳ Connecting to Google…</div>';
-    if (connectBtn) connectBtn.style.display = 'none';
-    if (disconnectBtn) disconnectBtn.style.display = 'none';
-    return;
-  }
-  if (driveReady) {
-    el.innerHTML = '<div class="drive-banner ok">☁️ Connected to Google Drive — your data syncs automatically.</div>';
-    if (connectBtn) connectBtn.style.display = 'none';
-    if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+  const urlIn = document.getElementById('cl-url');
+  const tokIn = document.getElementById('cl-token');
+  if (urlIn) urlIn.value = cloud.url || '';
+  if (tokIn) tokIn.value = cloud.token || '';
+  const disc = document.getElementById('btn-disconnect-cloud');
+  if (cloud.url && cloud.token) {
+    const when = cloud.lastSync ? new Date(cloud.lastSync).toLocaleString() : 'never';
+    el.innerHTML = `<div class="drive-banner ok">☁️ Cloud sync on. Last synced: ${when}</div>`;
+    if (disc) disc.style.display = 'inline-flex';
   } else {
-    el.innerHTML = '<div class="drive-banner warn">⚠️ Not connected — tap Connect Drive to sync across devices.</div>';
-    if (connectBtn) connectBtn.style.display = 'inline-flex';
-    if (disconnectBtn) disconnectBtn.style.display = 'none';
+    el.innerHTML = `<div class="drive-banner warn">⚠️ Not synced — data saved locally only.</div>`;
+    if (disc) disc.style.display = 'none';
   }
 }
 
-function saveClientId() {
-  const v = document.getElementById('client-id-input').value.trim();
-  if (!v) { toast('Enter a Client ID first'); return; }
-  localStorage.setItem(CLIENT_ID_KEY, v);
-  toast('Client ID saved — reload to initialize');
-  loadGapi();
-  renderDriveStatus();
+// ─── Share (live link via API) ───────────────────────────────────────
+async function createShare() {
+  if (!cloud.url || !cloud.token) { toast('Turn on Cloud sync first'); return; }
+  await cloudPush();
+  try {
+    const r = await fetch(cloud.url.replace(/\/$/,'') + '/api/share', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + cloud.token }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if (j.share_token) {
+      shareToken = j.share_token;
+      localStorage.setItem(SHARE_TOKEN_KEY, shareToken);
+      renderShareStatus();
+      toast('Share link ready ✓');
+    } else toast('Could not create link');
+  } catch(e) { toast('Failed (server waking up? try again in 30s)'); }
+}
+
+async function stopShare() {
+  if (!confirm('Stop sharing? The current link will stop working immediately.')) return;
+  try { await fetch(cloud.url.replace(/\/$/,'') + '/api/share', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + cloud.token } }); } catch(e) {}
+  shareToken = '';
+  localStorage.removeItem(SHARE_TOKEN_KEY);
+  renderShareStatus();
+  toast('Sharing stopped');
+}
+
+function shareLinkUrl() {
+  if (!shareToken || !cloud.url) return '';
+  const base = location.origin + location.pathname.replace(/index\.html$/, '').replace(/\/$/, '');
+  return `${base}/share.html?t=${encodeURIComponent(shareToken)}&api=${encodeURIComponent(cloud.url)}`;
+}
+
+function copyShareLink() {
+  const link = shareLinkUrl();
+  if (!link) return;
+  navigator.clipboard.writeText(link).then(() => toast('Link copied ✓'), () => toast('Copy failed'));
+}
+
+function renderShareStatus() {
+  const el = document.getElementById('share-status');
+  if (!el) return;
+  const createBtn = document.getElementById('btn-create-share');
+  const copyBtn = document.getElementById('btn-copy-share');
+  const stopBtn = document.getElementById('btn-stop-share');
+  if (shareToken && cloud.url) {
+    const link = shareLinkUrl();
+    el.innerHTML = `<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Live link:</div><div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;word-break:break-all;font-family:ui-monospace,SFMono-Regular,monospace">${link.replace(/&/g,'&amp;')}</div>`;
+    if (createBtn) createBtn.style.display = 'none';
+    if (copyBtn) copyBtn.style.display = 'inline-flex';
+    if (stopBtn) stopBtn.style.display = 'inline-flex';
+  } else {
+    el.innerHTML = '';
+    if (createBtn) createBtn.style.display = 'inline-flex';
+    if (copyBtn) copyBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'none';
+  }
 }
 
 // ─── Navigation ───────────────────────────────────────────────────────
@@ -864,7 +864,7 @@ function goTab(tab) {
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'list') renderList();
   if (tab === 'referrals') renderReferrals();
-  if (tab === 'settings') renderDriveStatus();
+  if (tab === 'settings') { renderCloudStatus(); renderShareStatus(); }
   window.scrollTo(0, 0);
 }
 
@@ -964,12 +964,14 @@ function renderDashboard() {
     `).join('');
   }
 
-  // Drive banner
-  const db = document.getElementById('drive-banner');
-  if (!driveReady) {
-    db.innerHTML = '<div class="drive-banner" style="margin-bottom:14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 2L2 19.5h20L12 2z"/><path d="M12 9v4M12 17h.01"/></svg> Data is saved locally. <a href="#" onclick="goTab(\'settings\');return false;" style="color:var(--blue);font-weight:600;margin-left:4px">Set up Drive sync →</a></div>';
-  } else {
-    db.innerHTML = '';
+  // Cloud sync banner
+  const db = document.getElementById('cloud-banner');
+  if (db) {
+    if (!cloud.url || !cloud.token) {
+      db.innerHTML = '<div class="drive-banner" style="margin-bottom:14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 2L2 19.5h20L12 2z"/><path d="M12 9v4M12 17h.01"/></svg> Data is saved locally. <a href="#" onclick="goTab(\'settings\');return false;" style="color:var(--blue);font-weight:600;margin-left:4px">Set up cloud sync →</a></div>';
+    } else {
+      db.innerHTML = '';
+    }
   }
 }
 
@@ -1606,66 +1608,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ─── Danger ───────────────────────────────────────────────────────────
-function generateSharePage() {
-  const watched = state.dramas
-    .filter(d => d.status === 'Watched')
-    .sort((a,b) => (b.dateFinished||'').localeCompare(a.dateFinished||''));
-
-  const cards = watched.map(d => {
-    const stars = d.rating ? '★'.repeat(d.rating) + '☆'.repeat(5 - d.rating) : '☆☆☆☆☆';
-    const starColor = d.rating ? '#d4902a' : '#ddd0ca';
-    const cats = (d.categories||[]).map(c => `<span style="background:#f0eef8;color:#7a6a9a;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500">${c}</span>`).join('');
-    const meta = [
-      d.service ? `📺 ${d.service}` : '',
-      d.dateFinished ? `✅ ${fmtDate(d.dateFinished)}` : '',
-      d.favorite ? '❤️ Favorite' : ''
-    ].filter(Boolean).join(' &nbsp;·&nbsp; ');
-    return `<div style="background:#fff;border:1px solid #ecddd7;border-radius:14px;padding:16px;break-inside:avoid">
-      ${d.favorite ? '<div style="float:right;font-size:16px">❤️</div>' : ''}
-      <div style="font-weight:700;font-size:15px;margin-bottom:6px;line-height:1.3">${d.title}</div>
-      <div style="color:${starColor};font-size:16px;letter-spacing:1px;margin-bottom:6px">${stars}</div>
-      ${meta ? `<div style="font-size:12px;color:#7a6a65;margin-bottom:8px">${meta}</div>` : ''}
-      ${cats ? `<div style="display:flex;flex-wrap:wrap;gap:4px">${cats}</div>` : ''}
-    </div>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My K-Drama Years 🌸</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fdf7f4; color: #3a2e2e; min-height: 100vh; }
-.header { background: #fff; border-bottom: 1px solid #ecddd7; padding: 24px 20px; text-align: center; }
-.header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-.header h1 span { color: #c26b6b; }
-.header p { color: #7a6a65; font-size: 14px; margin-top: 6px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; padding: 24px 20px; max-width: 960px; margin: 0 auto; }
-@media (max-width: 480px) { .grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; } }
-.footer { text-align: center; padding: 24px; font-size: 12px; color: #a89890; }
-</style>
-</head>
-<body>
-<div class="header">
-  <h1>My <span>K-Drama</span> Year</h1>
-  <p>${watched.length} dramas watched</p>
-</div>
-<div class="grid">${cards}</div>
-<div class="footer">Made with My K-Drama Years 🌸 tracker</div>
-</body>
-</html>`;
-
-  const blob = new Blob([html], { type: 'text/html' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'my-kdrama-list.html';
-  a.click();
-  toast('Downloaded! Share the file or drag it to Netlify Drop for a link.');
-}
-
 function clearAllData() {
   if (!confirm('This will delete ALL your dramas and referrals. Are you absolutely sure?')) return;
   if (!confirm('Last chance — this cannot be undone.')) return;
@@ -1685,20 +1627,14 @@ function renderAll() {
 // ─── Init ─────────────────────────────────────────────────────────────
 loadLocal();
 renderDashboard();
-renderDriveStatus();
+renderCloudStatus();
+renderShareStatus();
 
-// Load gapi + GSI
-const s1 = document.createElement('script');
-s1.src = 'https://apis.google.com/js/api.js';
-s1.onload = loadGapi;
-document.head.appendChild(s1);
-const s2 = document.createElement('script');
-s2.src = 'https://accounts.google.com/gsi/client';
-s2.onload = loadGsi;
-document.head.appendChild(s2);
+// Pull cloud state on startup (if configured) — silent
+if (cloud.url && cloud.token) cloudPull().then(ok => { if (ok) renderAll(); });
 
 // Online/offline
-window.addEventListener('online', () => { if (driveReady) saveToDrive(); });
+window.addEventListener('online', () => { if (cloud.url && cloud.token) cloudPush(); });
 
 // Init category filter
 document.addEventListener('DOMContentLoaded', () => {
